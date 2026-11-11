@@ -17,7 +17,7 @@ npm install
 node build.mjs   # gera o index.html na raiz, que é o que o GitHub Pages publica
 ```
 
-Fotos usadas como pistas ficam na pasta `assets/`, que não vai para o repositório. Sem ela, o jogo funciona normalmente e só deixa de mostrar essas pistas.
+Fotos usadas como pistas ficam na pasta `assets/`. Se uma foto faltar, o jogo funciona normalmente e só deixa de mostrar aquela pista.
 
 - `src/scenes.js`: prólogo, corredor e as memórias (cenários, personagens, falas)
 - `src/chars.js`: aparência dos personagens (`LOOKS`)

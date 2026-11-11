@@ -315,9 +315,9 @@ export const MEMORIES = [
         ambient: 'E o prêmio vai para...',
       });
       api.npc('lisis', -4.4, 1.9, {
-        sit: true, y: 0.1, rot: 0.8, ambient: 'Scout fugiu...', ambientR: 3.2,
+        sit: true, y: 0.1, rot: 0.8, ambient: 'SCOOOOOUT', ambientStyle: 'shout-sm', ambientR: 3.2,
         look: { shirt: 0xf3efe6, skirt: 0x161616, skirtLen: 'midi', pattern: 'vest', sleeveless: true },
-        label: 'Falar com Lísis', once: false, lines: [{ text: 'Scout fugiu...' }],
+        label: 'Falar com Lísis', once: false, lines: [{ text: 'SCOOOOOUT', style: 'shout' }],
       });
       api.npc('yasmim', 4.75, -1.35, { sit: true, y: 0.12, rot: -1.05, look: { shirt: 0xd6336c, skirt: 0xd6336c, skirtLen: 'midi', sleeveless: true } });
       api.npc('chinelo', 4.75, 1.35, { sit: true, y: 0.12, rot: -1.15, look: { shirt: 0xd7262e, skirt: 0xd7262e, sleeveless: true } });

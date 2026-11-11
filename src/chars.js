@@ -18,21 +18,21 @@ export const LOOKS = {
   breno:   { skin: 0xd9a77c, hair: 0x2a1b10, hairStyle: 'short', shirt: 0x3d7a4f, pants: 0x2c3e50 },
   dudao:   { skin: 0xc68e62, hair: 0x2a1a10, hairStyle: 'bun', shirt: 0xe67e22, pants: 0x1f3a5f },
   flora:   { skin: 0xf0c8a0, hair: 0x7a3e1d, hairStyle: 'long', shirt: 0x8e44ad, pants: 0x222222 },
-  hanna:   { skin: 0xe8b896, hair: 0x6b4226, hairStyle: 'bun', shirt: 0xf4a6b8, pants: 0x3a3a5a, extras: ['glasses'] },
+  hanna:   { skin: 0xe8b896, hair: 0x6b4226, hairStyle: 'bun', shirt: 0xf4a6b8, pants: 0x3a3a5a },
   nala:    { skin: 0xd9a582, hair: 0x2a1a12, hairStyle: 'long', shirt: 0x7fb24a, pants: 0x2d2d2d },
   nanda:   { skin: 0xf0cfb4, hair: 0x2a1810, hairStyle: 'long', shirt: 0xf4f0e8, pants: 0x2c3e50 },
 
   // coringas
-  alice:   { skin: 0xf2cdb0, hair: 0x7a4b2a, hairStyle: 'curly', shirt: 0xd7372f, pants: 0x2f7a4e, extras: ['glasses'] },
+  alice:   { skin: 0xf2cdb0, hair: 0x7a4b2a, hairStyle: 'curly', shirt: 0xd7372f, pants: 0x2f7a4e },
   chinelo: { skin: 0xd8a17c, hair: 0x241610, hairStyle: 'long', shirt: 0xf39c12, pants: 0x3b3b3b },
-  lisis:   { skin: 0xf0c9a8, hair: 0x3a2216, hairStyle: 'curly', shirt: 0x5dade2, pants: 0x34495e, extras: ['glasses'] },
+  lisis:   { skin: 0xf0c9a8, hair: 0x3a2216, hairStyle: 'curly', shirt: 0x5dade2, pants: 0x34495e },
   yasmim:  { skin: 0xe0b48e, hair: 0x1a120e, hairStyle: 'long', shirt: 0xc0392b, pants: 0x1c2833 },
 
   // figurantes com nome (não estão no amigo secreto)
-  titia:   { skin: 0xe0b08a, hair: 0x9a9a9a, hairStyle: 'bun', shirt: 0xffffff, pants: 0x34495e, extras: ['glasses'] },
+  titia:   { skin: 0xe0b08a, hair: 0x9a9a9a, hairStyle: 'bun', shirt: 0xffffff, pants: 0x34495e },
   mayara:  { skin: 0xd9a77c, hair: 0x3a2214, hairStyle: 'long', shirt: 0xfafafa, pants: 0x1f3a5f },
   joao:    { skin: 0xe2b48c, hair: 0x2b1a10, hairStyle: 'short', shirt: 0x95a5a6, pants: 0x2c3e50 },
-  silvana: { skin: 0xd8a47f, hair: 0x5a3010, hairStyle: 'short', shirt: 0xff7aa2, pants: 0x4a4a4a, extras: ['sunglasses'] },
+  silvana: { skin: 0xd8a47f, hair: 0x5a3010, hairStyle: 'short', shirt: 0xff7aa2, pants: 0x4a4a4a },
   clarice: { skin: 0xeec4a0, hair: 0xb5651d, hairStyle: 'long', shirt: 0x2c3e50, pants: 0x2c3e50 },
   comissaria: { skin: 0xd9a77c, hair: 0x2b1a10, hairStyle: 'bun', shirt: 0x1f3a6e, pants: 0x1f3a6e },
   // figurantes sem nome (multidão do carnaval)
@@ -66,11 +66,11 @@ function buildHair(style, color, head) {
       part(0.08, 0.18, 0.5, c, 0.3, 0.22, -0.04, g);
       break;
     case 'long':
-      part(0.66, 0.14, 0.66, c, 0, 0.33, 0, g);
-      part(0.66, 0.85, 0.12, c, 0, -0.05, -0.3, g);
-      part(0.1, 0.65, 0.5, c, -0.33, 0.05, -0.06, g);
-      part(0.1, 0.65, 0.5, c, 0.33, 0.05, -0.06, g);
-      part(0.6, 0.1, 0.08, c, 0, 0.26, 0.3, g);
+      part(0.7, 0.16, 0.7, c, 0, 0.33, 0, g);
+      part(0.74, 1.3, 0.14, c, 0, -0.28, -0.31, g);
+      part(0.12, 0.85, 0.56, c, -0.35, -0.04, -0.05, g);
+      part(0.12, 0.85, 0.56, c, 0.35, -0.04, -0.05, g);
+      part(0.62, 0.11, 0.08, c, 0, 0.26, 0.3, g);
       break;
     case 'bun':
       part(0.64, 0.12, 0.64, c, 0, 0.32, 0, g);
@@ -78,10 +78,11 @@ function buildHair(style, color, head) {
       part(0.28, 0.24, 0.24, c, 0, 0.38, -0.36, g);
       break;
     case 'curly':
-      part(0.82, 0.36, 0.8, c, 0, 0.36, -0.04, g);
-      part(0.82, 0.55, 0.2, c, 0, 0.1, -0.33, g);
-      part(0.14, 0.45, 0.6, c, -0.38, 0.14, -0.06, g);
-      part(0.14, 0.45, 0.6, c, 0.38, 0.14, -0.06, g);
+      part(0.92, 0.42, 0.9, c, 0, 0.36, -0.04, g);
+      part(0.96, 1.15, 0.26, c, 0, -0.2, -0.36, g);
+      part(0.18, 0.85, 0.66, c, -0.42, -0.02, -0.08, g);
+      part(0.18, 0.85, 0.66, c, 0.42, -0.02, -0.08, g);
+      part(0.7, 0.12, 0.1, c, 0, 0.28, 0.31, g);
       break;
     case 'puff':
       part(0.64, 0.12, 0.64, c, 0, 0.32, 0, g);
