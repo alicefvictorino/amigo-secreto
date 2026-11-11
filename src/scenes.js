@@ -430,7 +430,6 @@ export const MEMORIES = [
       const branch = (x1, y1, z1, x2, y2, z2, t) => rope(st, new THREE.Vector3(x1, y1, z1), new THREE.Vector3(x2, y2, z2), t, 0x6e5034);
       branch(TX, 3.4, TZ, TX - 2.4, 5.6, TZ - 1.2, 0.6);
       branch(TX, 3.4, TZ, TX + 2.6, 5.4, TZ - 0.8, 0.55);
-      branch(TX, 3.0, TZ, TX + 2.0, 4.1, TZ - 0.4, 0.4);
       branch(TX, 3.6, TZ, TX + 0.4, 6.0, TZ - 2.0, 0.5);
       [[0, 5.6, -1.6, 4.4, 1.6, 3.6], [-2.6, 5.4, -1.0, 3.4, 1.4, 3.2], [2.4, 5.2, -0.6, 3.4, 1.4, 3.0], [0.2, 6.6, -1.8, 3.0, 1.1, 2.6], [-1.2, 5.0, 0.6, 2.4, 0.9, 1.8]].forEach(([dx, y, dz, w, h, d]) => st.box(TX + dx, y, TZ + dz, w, h, d, 0x3d8a33));
 
@@ -441,35 +440,40 @@ export const MEMORIES = [
       [-8.4, -11.2].forEach(x => { st.box(x, -0.6, TZ - 0.45, 0.2, 3.2, 0.2, 0x7a5a3c, { solid: true }); st.box(x, -0.6, TZ + 0.65, 0.2, 3.2, 0.2, 0x7a5a3c, { solid: true }); });
       for (let x = TX - 1.0; x > -12; x -= 1.1) { rope(st, new THREE.Vector3(x, 2.65, TZ - 0.45), new THREE.Vector3(x, 3.35, TZ - 0.45), 0.04, 0xd9b26b); rope(st, new THREE.Vector3(x, 2.65, TZ + 0.65), new THREE.Vector3(x, 3.35, TZ + 0.65), 0.04, 0xd9b26b); }
 
-      // balanço de madeira num dos galhos
-      const SW = new THREE.Vector3(TX + 1.8, 4.05, TZ - 0.35);
+      // balanço de madeira num dos galhos (balança de um lado para o outro, de frente para a câmera de lado)
+      branch(TX, 3.3, TZ, TX + 2.1, 4.15, TZ - 0.95, 0.38);
+      const SW = new THREE.Vector3(TX + 1.95, 4.05, TZ - 0.95);
       const swing = new THREE.Group(); swing.position.copy(SW); st.add(swing);
       const swingLen = 3.45;
-      [[-0.35], [0.35]].forEach(([dx]) => { const r = new THREE.Mesh(BOX, mat(0xd9b26b)); r.scale.set(0.04, swingLen, 0.04); r.position.set(dx, -swingLen / 2, 0); swing.add(r); });
-      const seat = new THREE.Mesh(BOX, mat(0xa77b4f)); seat.scale.set(0.9, 0.08, 0.4); seat.position.set(0, -swingLen, 0); seat.castShadow = true; swing.add(seat);
+      [-0.38, 0.38].forEach(dz => { const r = new THREE.Mesh(BOX, mat(0xd9b26b)); r.scale.set(0.04, swingLen, 0.04); r.position.set(0, -swingLen / 2, dz); swing.add(r); });
+      const seat = new THREE.Mesh(BOX, mat(0xa77b4f)); seat.scale.set(0.42, 0.08, 0.95); seat.position.set(0, -swingLen, 0); seat.castShadow = true; swing.add(seat);
       let swingT = 0, swinging = false;
-      st.updaters.push((dt) => { swingT += dt; if (!swinging) swing.rotation.x = Math.sin(swingT * 1.3) * 0.06; });
+      st.updaters.push((dt) => { swingT += dt; if (!swinging) swing.rotation.z = Math.sin(swingT * 1.3) * 0.05; });
       api.interact({
-        x: SW.x, z: SW.z + 0.6, r: 1.5, label: 'Balançar', once: false,
+        x: SW.x + 0.9, z: SW.z, r: 1.4, label: 'Balançar', once: false,
         onInteract: async () => {
           const pl = api.player;
           swinging = true;
           pl.anim.mode = 'sit';
-          pl.root.rotation.y = 0;
+          pl.root.rotation.set(0, Math.PI / 2, 0);
           const start = performance.now();
           await new Promise(res => {
             const step = () => {
               const t = (performance.now() - start) / 1000;
-              const a = Math.sin(t * 2.4) * 0.55 * Math.min(1, t) * Math.max(0, Math.min(1, (4.5 - t)));
-              swing.rotation.x = a;
-              pl.root.position.set(SW.x, SW.y - Math.cos(a) * swingLen - 0.38, SW.z + Math.sin(a) * swingLen + 0.1);
-              if (t < 4.5) requestAnimationFrame(step); else res();
+              const amp = 0.6 * Math.min(1, t * 0.8) * Math.max(0, Math.min(1, 5 - t));
+              const a = Math.sin(t * 2.3) * amp;
+              swing.rotation.z = a;
+              // o boneco acompanha o assento: mesma rotação e mesma posição no arco
+              pl.root.position.set(SW.x + Math.sin(a) * swingLen, SW.y - Math.cos(a) * swingLen - 0.4, SW.z);
+              pl.root.rotation.z = a;
+              if (t < 5) requestAnimationFrame(step); else res();
             };
             step();
           });
           swinging = false;
+          pl.root.rotation.set(0, Math.PI / 2, 0);
           pl.anim.mode = 'idle';
-          pl.root.position.set(SW.x, 0, SW.z + 1.0);
+          pl.root.position.set(SW.x + 1.2, 0, SW.z);
         },
       });
 
@@ -549,10 +553,14 @@ export const MEMORIES = [
       rope(st, P(1, 0), P(1, 1), 0.08, 0xc9a25b);
       st.solid(x1 - 0.3, x2 + 0.3, zt - 0.5, zb - 0.5);
 
-      // slackline da árvore até uma estaca de madeira
-      const slA = new THREE.Vector3(TX + 0.65, 0.62, -3.9), slB = new THREE.Vector3(7.4, 0.62, -2.9);
-      rope(st, slA, slB, 0.05, 0x2f6fae);
+      // slackline amarrado no tronco da árvore até uma estaca de madeira, com uma leve barriga no meio
+      const slA = new THREE.Vector3(TX + 0.66, 0.7, TZ + 0.35), slB = new THREE.Vector3(7.4, 0.62, -2.9);
+      const SAG = 0.14;
+      const slAt = (t) => { const p = slA.clone().lerp(slB, t); p.y -= SAG * 4 * t * (1 - t); return p; };
+      for (let i = 0; i < 10; i++) rope(st, slAt(i / 10), slAt((i + 1) / 10), 0.05, 0x2f6fae);
+      st.box(TX, 0.62, TZ, 1.36, 0.14, 1.36, 0x2f6fae, { cast: false }); // fita enrolada no tronco
       st.box(slB.x, 0, slB.z, 0.22, 0.75, 0.22, 0x7a5a3c, { solid: true });
+      st.box(slB.x, 0.56, slB.z, 0.27, 0.1, 0.27, 0x2f6fae, { cast: false });
 
       // mesa de plástico e toalhas de praia
       const tbl = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.75, 0.06, 16), mat(0xf4f4f4)); tbl.position.set(3.4, 0.74, 2.2); tbl.castShadow = true; st.add(tbl);
@@ -574,7 +582,7 @@ export const MEMORIES = [
       api.npc('chinelo', 2.2, 5.1, { sit: true, y: -0.35, rot: -0.25, look: { bikini: 0xf8f8f8, shorts: true, pants: 0x1c1c1c } });
 
       // Yasmim andando no slackline
-      const yas = api.npc('yasmim', slA.x + 2, -3.6, { solid: false, facePlayer: false, look: { bikini: 0xff8a1e, pants: 0x151515 } });
+      const yas = api.npc('yasmim', slA.x + 2, slA.z, { solid: false, facePlayer: false, look: { bikini: 0xff8a1e, pants: 0x151515 } });
       yas.ch.holdArms = true;
       yas.ch.parts.armL.rotation.z = -1.6; yas.ch.parts.armR.rotation.z = 1.6;
       yas.moving = true;
@@ -582,8 +590,8 @@ export const MEMORIES = [
       st.updaters.push((dt, t) => {
         yt2 += dt * 0.09 * dir;
         if (yt2 > 0.85) dir = -1; else if (yt2 < 0.15) dir = 1;
-        const p = slA.clone().lerp(slB, yt2);
-        yas.root.position.set(p.x, p.y + 0.02 + Math.sin(t * 6) * 0.02, p.z);
+        const p = slAt(yt2);
+        yas.root.position.set(p.x, p.y + 0.03 + Math.sin(t * 6) * 0.02, p.z);
         yas.root.rotation.y = Math.atan2((slB.x - slA.x) * dir, (slB.z - slA.z) * dir);
         yas.root.rotation.z = Math.sin(t * 2.3) * 0.07;
       });
