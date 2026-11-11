@@ -366,7 +366,7 @@ export const MEMORIES = [
       });
 
       // pista escondida: um celular caído entre os puffs, com uma foto
-      // (só aparece se a foto estiver na pasta assets/, que fica fora do repositório)
+      // (se a foto não estiver na pasta assets/, a pista não aparece)
       if (fotoMelhores) {
       const phone = new THREE.Group(); phone.position.set(5.15, 0, 0.05); phone.rotation.y = 0.5; st.add(phone);
       const ph = new THREE.Mesh(BOX, mat(0x1c1c22)); ph.scale.set(0.36, 0.04, 0.2); ph.position.y = 0.03; phone.add(ph);
