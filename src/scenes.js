@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { mat, BOX } from './world.js';
 import { makeCat } from './chars.js';
 import fotoMelhores from '../assets/melhores-grupo.jpg';
+import fotoVale from '../assets/vale-piquenique.jpg';
 import { SECRET_NAME, SECRET_KEY } from './secret.js';
 
 // =====================================================================
@@ -126,6 +127,30 @@ function melhoresTV() {
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
   return t;
+}
+
+// pista escondida com foto: um objeto brilhando no chão; ao interagir, a foto aparece numa polaroide
+function photoClue(st, api, { x, z, rot = 0, photo, caption, thought, kind = 'phone' }) {
+  if (!photo) return; // sem a foto na pasta assets/, a pista não aparece
+  const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = rot; st.add(g);
+  if (kind === 'camera') {
+    const body = new THREE.Mesh(BOX, mat(0xc9ccd1)); body.scale.set(0.34, 0.2, 0.12); body.position.y = 0.1; body.castShadow = true; g.add(body);
+    const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.08, 12), mat(0x3a3a3a)); lens.rotation.x = Math.PI / 2; lens.position.set(0.04, 0.1, 0.09); g.add(lens);
+    const btn = new THREE.Mesh(BOX, mat(0x222222)); btn.scale.set(0.06, 0.02, 0.04); btn.position.set(-0.1, 0.21, 0); g.add(btn);
+  } else {
+    const ph = new THREE.Mesh(BOX, mat(0x1c1c22)); ph.scale.set(0.36, 0.04, 0.2); ph.position.y = 0.03; g.add(ph);
+    const scr = new THREE.Mesh(BOX, mat(0x9fd3ff, { emissive: 0x6fb8ff, ei: 1.2 })); scr.scale.set(0.3, 0.01, 0.16); scr.position.y = 0.055; g.add(scr);
+  }
+  const spark = new THREE.Mesh(new THREE.OctahedronGeometry(0.08), mat(0xfff2b0, { emissive: 0xffe680, ei: 2 }));
+  spark.position.set(x, 0.5, z); st.add(spark);
+  st.updaters.push((dt, t) => { spark.rotation.y += dt * 3; spark.position.y = 0.5 + Math.sin(t * 3) * 0.08; spark.visible = Math.sin(t * 1.7) > -0.3; });
+  api.interact({
+    x, z, r: 1.3, h: 1.4, label: 'O que é isso?', once: false,
+    onInteract: async () => {
+      api.sfx.prompt();
+      await api.screen(`<div class="polaroid"><img src="${photo}" alt=""><div class="cap">${caption}</div></div><div class="photo-thought">${thought}</div>`, { cls: 'photo' });
+    },
+  });
 }
 
 // =====================================================================
@@ -365,23 +390,8 @@ export const MEMORIES = [
         cat.animate(dt, 3);
       });
 
-      // pista escondida: um celular caído entre os puffs, com uma foto
-      // (se a foto não estiver na pasta assets/, a pista não aparece)
-      if (fotoMelhores) {
-      const phone = new THREE.Group(); phone.position.set(5.15, 0, 0.05); phone.rotation.y = 0.5; st.add(phone);
-      const ph = new THREE.Mesh(BOX, mat(0x1c1c22)); ph.scale.set(0.36, 0.04, 0.2); ph.position.y = 0.03; phone.add(ph);
-      const scr = new THREE.Mesh(BOX, mat(0x9fd3ff, { emissive: 0x6fb8ff, ei: 1.2 })); scr.scale.set(0.3, 0.01, 0.16); scr.position.y = 0.055; phone.add(scr);
-      const spark = new THREE.Mesh(new THREE.OctahedronGeometry(0.08), mat(0xfff2b0, { emissive: 0xffe680, ei: 2 }));
-      spark.position.set(5.15, 0.45, 0.05); st.add(spark);
-      st.updaters.push((dt, t) => { spark.rotation.y += dt * 3; spark.position.y = 0.45 + Math.sin(t * 3) * 0.08; spark.visible = Math.sin(t * 1.7) > -0.3; });
-      api.interact({
-        x: 5.15, z: 0.05, r: 1.3, h: 1.4, label: 'O que é isso?', once: false,
-        onInteract: async () => {
-          api.sfx.prompt();
-          await api.screen(`<div class="polaroid"><img src="${fotoMelhores}" alt=""><div class="cap">Melhores do Ano 2024</div></div><div class="photo-thought">Nossa... Queria lembrar quem eu sou.</div>`, { cls: 'photo' });
-        },
-      });
-      }
+      // pista escondida: um celular caído entre os puffs, com a foto daquela noite
+      photoClue(st, api, { x: 5.15, z: 0.05, rot: 0.5, photo: fotoMelhores, caption: 'Melhores do Ano 2024', thought: 'Nossa... Queria lembrar quem eu sou.' });
 
       api.exit(-5.4, 0.2, { rotY: Math.PI / 2, w: 1.5 });
 
@@ -613,6 +623,10 @@ export const MEMORIES = [
         },
       });
       nanda.ambient = 'Bora?';
+
+      // pista escondida: uma câmera digital esquecida na grama, com a foto do piquenique
+      photoClue(st, api, { x: 10.2, z: 1.6, rot: -0.6, kind: 'camera', photo: fotoVale, caption: 'Vale Encantado 2024', thought: 'Esse dia foi bom... Queria lembrar quem eu sou.' });
+
       api.exit(10.2, 7.4, { rotY: -2.36 });
 
       return {
