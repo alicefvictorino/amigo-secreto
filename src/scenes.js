@@ -560,12 +560,11 @@ export const MEMORIES = [
       st.sign('VALE ENCANTADO', 8.6, 1.55, 7.75, 2.6, 0.65, { bg: '#7a5230', fg: '#fff4e0' });
 
       // quem pode ser identificado: Alice, Chinelo e Yasmim; Nanda sai aqui
-      const SUMMER = (shirt, pants) => ({ shirt, pants, shorts: true, sleeveless: true });
-      api.npc('alice', -1.9, 5.0, { sit: true, y: -0.35, rot: 0.2, look: SUMMER(0xff6f91, 0x1c1c1c) });
-      api.npc('chinelo', 2.2, 5.1, { sit: true, y: -0.35, rot: -0.25, look: SUMMER(0x2a9d8f, 0x3b3b3b) });
+      api.npc('alice', -1.9, 5.0, { sit: true, y: -0.35, rot: 0.2, look: { bikini: 0xff4f8b, shorts: true, pants: 0x1c1c1c } });
+      api.npc('chinelo', 2.2, 5.1, { sit: true, y: -0.35, rot: -0.25, look: { bikini: 0xf8f8f8, shorts: true, pants: 0x1c1c1c } });
 
       // Yasmim andando no slackline
-      const yas = api.npc('yasmim', slA.x + 2, -3.6, { solid: false, facePlayer: false, look: { shirt: 0x151515, pants: 0x151515, sleeveless: true } });
+      const yas = api.npc('yasmim', slA.x + 2, -3.6, { solid: false, facePlayer: false, look: { bikini: 0xff8a1e, pants: 0x151515 } });
       yas.ch.holdArms = true;
       yas.ch.parts.armL.rotation.z = -1.6; yas.ch.parts.armR.rotation.z = 1.6;
       yas.moving = true;
@@ -587,7 +586,7 @@ export const MEMORIES = [
       api.npc('boneco', 4.5, 2.2, { ...grey, sit: true, y: 0.1, rot: -Math.PI / 2 });
 
       const nanda = api.npc('nanda', 6.2, -3.6, {
-        label: 'Falar com Nanda', look: SUMMER(0xf28c38, 0x7a3b6e),
+        label: 'Falar com Nanda', look: { bikini: 0xe8743b, shorts: true, pants: 0x6e1a24, shortsPattern: 0xff9a3c, hairStyle: 'ponytail' },
         lines: [{ text: 'Vamos subir comigo?' }],
         onInteract: async (n) => {
           const pl = api.player;

@@ -84,6 +84,14 @@ function buildHair(style, color, head) {
       part(0.18, 0.85, 0.66, c, 0.42, -0.02, -0.08, g);
       part(0.7, 0.12, 0.1, c, 0, 0.28, 0.31, g);
       break;
+    case 'ponytail':
+      part(0.66, 0.14, 0.66, c, 0, 0.33, 0, g);
+      part(0.66, 0.42, 0.1, c, 0, 0.12, -0.3, g);
+      part(0.1, 0.4, 0.5, c, -0.33, 0.12, -0.06, g);
+      part(0.1, 0.4, 0.5, c, 0.33, 0.12, -0.06, g);
+      part(0.2, 0.2, 0.16, c, 0, 0.3, -0.4, g);
+      part(0.18, 0.75, 0.16, c, 0, -0.12, -0.44, g);
+      break;
     case 'puff':
       part(0.64, 0.12, 0.64, c, 0, 0.32, 0, g);
       part(0.5, 0.42, 0.5, c, 0, 0.6, -0.08, g);
@@ -208,6 +216,10 @@ export function makeCharacter(lookKey, overrides = {}) {
   const mkLeg = (x) => {
     const p = new THREE.Group(); p.position.set(x, 0.8, 0); body.add(p);
     part(0.28, 0.36, 0.3, thighCol, 0, -0.18, 0, p);
+    if (look.shortsPattern !== undefined) {
+      // estampa no short
+      [[-0.06, -0.08, 0.5], [0.07, -0.22, -0.5], [-0.02, -0.3, 0.3]].forEach(([dx, dy, rz]) => { const m = part(0.05, 0.16, 0.02, look.shortsPattern, dx, dy, 0.155, p); m.rotation.z = rz; });
+    }
     part(0.28, 0.3, 0.3, shinCol, 0, -0.51, 0, p);
     part(0.3, 0.14, 0.36, look.shoes ?? 0x333333, 0, -0.73, 0.03, p);
     return p;
@@ -216,12 +228,19 @@ export function makeCharacter(lookKey, overrides = {}) {
   parts.legR = mkLeg(0.16);
 
   const torso = new THREE.Group(); torso.position.set(0, 1.17, 0); body.add(torso);
-  part(0.66, 0.74, 0.38, look.shirt, 0, 0, 0, torso);
+  const hasBikini = look.bikini !== undefined;
+  part(0.66, 0.74, 0.38, hasBikini ? look.skin : look.shirt, 0, 0, 0, torso);
+  if (hasBikini) {
+    // parte de cima do biquíni
+    part(0.68, 0.17, 0.4, look.bikini, 0, 0.17, 0, torso);
+    part(0.05, 0.2, 0.05, look.bikini, -0.16, 0.33, 0.19, torso);
+    part(0.05, 0.2, 0.05, look.bikini, 0.16, 0.33, 0.19, torso);
+  }
   parts.torso = torso;
 
   const mkArm = (x) => {
     const p = new THREE.Group(); p.position.set(x, 1.5, 0); body.add(p);
-    part(0.2, 0.5, 0.24, look.sleeveless ? look.skin : look.shirt, 0, -0.2, 0, p);
+    part(0.2, 0.5, 0.24, look.sleeveless || look.bikini !== undefined ? look.skin : look.shirt, 0, -0.2, 0, p);
     part(0.18, 0.26, 0.22, look.longSleeves ? look.shirt : look.skin, 0, -0.56, 0, p);
     return p;
   };
