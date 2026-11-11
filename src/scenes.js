@@ -409,13 +409,13 @@ export const MEMORIES = [
       lights(st, { sky: 0xcdeeff, ground: 0x4a7a2a, sun: 1.9, shadow: 16 });
 
       // mata em volta (só nos fundos e nas laterais, para não tapar a câmera)
-      [[-11, -8], [-8, -8.6], [-1, -8.4], [2.5, -8.6], [10.8, -8.2], [11.2, -4], [11.4, 0.5], [-11.4, 2], [-11, 6]].forEach(([x, z], i) => st.tree(x, z, { h: 2.4 + (i % 3) * 0.7, s: 0.9 + (i % 2) * 0.3 }));
-      st.palm(-10.5, -5.5, 5.5); st.palm(9.6, -7.2, 6); st.palm(11.2, 4.5, 5);
-      [[-9, 8.4], [4.5, 8.6], [-3.5, 8.7]].forEach(([x, z]) => { st.box(x, 0, z, 1.4, 0.7, 0.9, 0x3f8f3a); st.box(x + 0.4, 0.5, z, 0.9, 0.5, 0.7, 0x4aa040); });
+      [[-11.6, -8], [-1, -8.4], [2.5, -8.6], [10.8, -8.2], [11.2, -4], [11.4, 0.5], [-11.7, 2], [-11.6, 6]].forEach(([x, z], i) => st.tree(x, z, { h: 2.4 + (i % 3) * 0.7, s: 0.9 + (i % 2) * 0.3 }));
+      st.palm(-11.6, -3.5, 5.5); st.palm(9.6, -7.2, 6); st.palm(11.2, 4.5, 5);
+      [[4.5, 8.6], [-3.5, 8.7]].forEach(([x, z]) => { st.box(x, 0, z, 1.4, 0.7, 0.9, 0x3f8f3a); st.box(x + 0.4, 0.5, z, 0.9, 0.5, 0.7, 0x4aa040); });
 
       // a grande árvore (com terra e folhas em volta)
       const TX = -5, TZ = -5.6;
-      st.box(TX + 0.6, -0.17, TZ + 0.8, 5.2, 0.2, 4.2, 0x8a6a45, { cast: false });
+      st.box(TX + 1.9, -0.17, TZ + 0.8, 4.2, 0.2, 4.2, 0x8a6a45, { cast: false });
       st.box(TX, 0, TZ, 1.3, 3.6, 1.3, 0x7a5a3c, { solid: true });
       const branch = (x1, y1, z1, x2, y2, z2, t) => rope(st, new THREE.Vector3(x1, y1, z1), new THREE.Vector3(x2, y2, z2), t, 0x6e5034);
       branch(TX, 3.4, TZ, TX - 2.4, 5.6, TZ - 1.2, 0.6);
@@ -424,11 +424,11 @@ export const MEMORIES = [
       branch(TX, 3.6, TZ, TX + 0.4, 6.0, TZ - 2.0, 0.5);
       [[0, 5.6, -1.6, 4.4, 1.6, 3.6], [-2.6, 5.4, -1.0, 3.4, 1.4, 3.2], [2.4, 5.2, -0.6, 3.4, 1.4, 3.0], [0.2, 6.6, -1.8, 3.0, 1.1, 2.6], [-1.2, 5.0, 0.6, 2.4, 0.9, 1.8]].forEach(([dx, y, dz, w, h, d]) => st.box(TX + dx, y, TZ + dz, w, h, d, 0x3d8a33));
 
-      // ponte de madeira saindo da árvore para a esquerda
+      // ponte de madeira saindo da árvore e atravessando o rio
       for (let x = TX - 0.8; x > -12; x -= 0.55) st.box(x, 2.6, TZ + 0.1, 0.45, 0.08, 1.0, 0xa77b4f);
       rope(st, new THREE.Vector3(TX - 0.6, 3.4, TZ - 0.45), new THREE.Vector3(-12, 3.3, TZ - 0.45), 0.05, 0xd9b26b);
       rope(st, new THREE.Vector3(TX - 0.6, 3.4, TZ + 0.65), new THREE.Vector3(-12, 3.3, TZ + 0.65), 0.05, 0xd9b26b);
-      [-8.4, -11.2].forEach(x => { st.box(x, 0, TZ - 0.45, 0.2, 2.6, 0.2, 0x7a5a3c); st.box(x, 0, TZ + 0.65, 0.2, 2.6, 0.2, 0x7a5a3c); });
+      [-8.4, -11.2].forEach(x => { st.box(x, -0.6, TZ - 0.45, 0.2, 3.2, 0.2, 0x7a5a3c, { solid: true }); st.box(x, -0.6, TZ + 0.65, 0.2, 3.2, 0.2, 0x7a5a3c, { solid: true }); });
       for (let x = TX - 1.0; x > -12; x -= 1.1) { rope(st, new THREE.Vector3(x, 2.65, TZ - 0.45), new THREE.Vector3(x, 3.35, TZ - 0.45), 0.04, 0xd9b26b); rope(st, new THREE.Vector3(x, 2.65, TZ + 0.65), new THREE.Vector3(x, 3.35, TZ + 0.65), 0.04, 0xd9b26b); }
 
       // balanço de madeira num dos galhos
@@ -463,29 +463,65 @@ export const MEMORIES = [
         },
       });
 
-      // rio com vitórias-régias, da árvore até a frente
-      const river = [[-5.0, -4.6], [-5.6, -2.0], [-6.5, 0.6], [-6.2, 3.2], [-6.9, 5.8], [-7.6, 9.0]];
-      const W = 2.8;
+      // rio ocupando toda a parte esquerda do mapa, com vitórias-régias; dá para entrar na água
+      const FAR = -10.9;
+      const bankPts = [[-9, -6.3], [-7, -6.2], [-5.6, -6.0], [-3.5, -5.6], [-1, -5.2], [1.5, -5.8], [4, -5.4], [6.5, -6.0], [9, -6.6]];
+      const bank = (z) => {
+        for (let i = 0; i < bankPts.length - 1; i++) {
+          const [z1, x1] = bankPts[i], [z2, x2] = bankPts[i + 1];
+          if (z >= z1 && z <= z2) return x1 + (x2 - x1) * (z - z1) / (z2 - z1);
+        }
+        return bankPts[bankPts.length - 1][1];
+      };
       const waterMat = new THREE.MeshPhongMaterial({ color: 0x6a4f30, specular: 0xbfe0f0, shininess: 90, emissive: 0x241a0c });
       st.disposables.push(waterMat);
-      for (let i = 0; i < river.length - 1; i++) {
-        const [x1, z1] = river[i], [x2, z2] = river[i + 1];
-        const len = Math.hypot(x2 - x1, z2 - z1);
-        const m = st.box((x1 + x2) / 2, -0.12, (z1 + z2) / 2, W + (i === 0 ? 1.4 : 0), 0.14, len + 0.6, 0x5b4630, { cast: false, rotY: Math.atan2(x2 - x1, z2 - z1) });
+      for (let z = -9; z < 9; z += 0.75) {
+        const bx = bank(z + 0.375);
+        const w = bx - FAR;
+        const m = st.box(FAR + w / 2, -0.12, z + 0.375, w, 0.15, 0.75, 0x5b4630, { cast: false });
         m.material = waterMat;
-        const sky = st.box((x1 + x2) / 2, 0.025, (z1 + z2) / 2, W + (i === 0 ? 1.4 : 0) - 0.2, 0.01, len - 0.05, 0x9fd0ea, { cast: false, opacity: 0.32, rotY: Math.atan2(x2 - x1, z2 - z1) });
+        const sky = st.box(FAR + w / 2, 0.035, z + 0.375, w, 0.01, 0.75, 0x9fd0ea, { cast: false, opacity: 0.3 });
         sky.receiveShadow = false;
-        // reflexos claros na água
-        for (let k = 0.6; k < len; k += 1.3) { const t = k / len; st.box(x1 + (x2 - x1) * t + ((k * 7) % 1 - 0.5), 0.03, z1 + (z2 - z1) * t, 0.9, 0.01, 0.08, 0xcfe6f2, { cast: false, opacity: 0.55 }); }
-        for (let k = 0; k <= len; k += 0.8) { const t = k / len; const cx = x1 + (x2 - x1) * t, cz = z1 + (z2 - z1) * t; st.solid(cx - W * 0.42, cx + W * 0.42, cz - 0.5, cz + 0.5); }
+        st.box(bx + 0.1, -0.05, z + 0.375, 0.3, 0.12, 0.75, 0x7a5a38, { cast: false });
       }
+      for (let i = 0; i < 26; i++) {
+        const z = -8.5 + (i * 0.71) % 17, x = FAR + 0.4 + ((i * 2.37) % 1) * (bank(z) - FAR - 0.8);
+        st.box(x, 0.04, z, 0.7 + (i % 3) * 0.2, 0.01, 0.05, 0xcfe6f2, { cast: false, opacity: 0.5 });
+      }
+      // margem do outro lado
+      st.box(-11.5, -0.1, 0, 1.4, 0.18, 18, 0x5ea83f, { cast: false });
       const pad = new THREE.CylinderGeometry(0.42, 0.42, 0.03, 10);
       const pads = [];
-      [[-5.4, -3], [-5.9, -1.2], [-6.6, 0.3], [-6.0, 1.8], [-6.7, 2.6], [-6.4, 4.2], [-7.0, 5.4], [-7.4, 7.0], [-6.1, -0.2], [-7.1, 3.6], [-4.4, -4.2], [-6.0, -3.4], [-5.2, -1.9], [-7.3, 1.2], [-6.3, 6.4], [-7.9, 8.0]].forEach(([x, z], i) => {
-        const p = new THREE.Mesh(pad, mat(i % 3 ? 0x6cb84a : 0x58a63a)); p.position.set(x, 0.05, z); st.add(p); pads.push(p);
-        if (i % 3 === 0) st.box(x + 0.1, 0.05, z, 0.16, 0.14, 0.16, 0xf7b6d2, { cast: false });
+      for (let i = 0; i < 34; i++) {
+        const z = -8.4 + ((i * 0.53) % 1) * 16.8 * 0.5 + (i % 2) * 8.4;
+        const x = FAR + 0.5 + ((i * 0.618) % 1) * (bank(z) - FAR - 1.0);
+        const p = new THREE.Mesh(pad, mat(i % 3 ? 0x6cb84a : 0x58a63a)); p.position.set(x, 0.06, z); p.scale.setScalar(0.8 + (i % 4) * 0.15); st.add(p); pads.push(p);
+        if (i % 4 === 0) st.box(x + 0.1, 0.06, z, 0.16, 0.14, 0.16, 0xf7b6d2, { cast: false });
+      }
+      st.updaters.push((dt, t) => pads.forEach((p, i) => { p.position.y = 0.06 + Math.sin(t * 1.5 + i) * 0.01; }));
+
+      // entrar na água: o boneco afunda até a cintura, anda mais devagar e faz ondinhas
+      const rings = [];
+      const ringGeo = new THREE.RingGeometry(0.3, 0.38, 20);
+      let inWater = false, ringT = 0;
+      st.updaters.push((dt) => {
+        const pl = api.player;
+        rings.forEach(r => { r.age += dt; r.mesh.scale.setScalar(1 + r.age * 2.2); r.mesh.material.opacity = Math.max(0, 0.6 - r.age * 0.5); });
+        while (rings.length && rings[0].age > 1.2) { const r = rings.shift(); st.root.remove(r.mesh); r.mesh.material.dispose(); }
+        if (!pl || api.state.cutscene) return;
+        const p = pl.root.position;
+        const now = p.x < bank(p.z) - 0.25 && p.x > FAR;
+        if (now !== inWater) { inWater = now; if (now) api.sfx.splash(); st.flags.speedMul = now ? 0.55 : 1; }
+        const targetY = inWater ? -0.62 : 0;
+        p.y += (targetY - p.y) * Math.min(1, dt * 8);
+        ringT += dt;
+        if (inWater && ringT > 0.35) {
+          ringT = 0;
+          const mesh = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: 0xe8f4fa, transparent: true, opacity: 0.6, depthWrite: false }));
+          mesh.rotation.x = -Math.PI / 2; mesh.position.set(p.x, 0.07, p.z); st.add(mesh);
+          rings.push({ mesh, age: 0 });
+        }
       });
-      st.updaters.push((dt, t) => pads.forEach((p, i) => { p.position.y = 0.05 + Math.sin(t * 1.5 + i) * 0.01; }));
 
       // rede de escalada
       const x1 = 3.9, x2 = 8.4, zb = -4.4, zt = -7.2, yt = 5.2;
@@ -581,9 +617,9 @@ export const MEMORIES = [
       api.exit(10.2, 7.4, { rotY: -2.36 });
 
       return {
-        bounds: { minX: -11, maxX: 11.3, minZ: -8, maxZ: 8.6 },
+        bounds: { minX: -11.6, maxX: 11.3, minZ: -8, maxZ: 8.6 },
         spawn: { x: 9.2, z: 6.6, rot: -2.36 },
-        camClamp: { minX: -4, maxX: 4.5, minZ: -2.5, maxZ: 4.2 },
+        camClamp: { minX: -6.5, maxX: 4.5, minZ: -2.5, maxZ: 4.2 },
         background: 0x9fd8ff,
         fog: { color: 0x9fd8ff, near: 28, far: 60 },
         music: 'calmo',

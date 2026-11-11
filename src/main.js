@@ -396,7 +396,7 @@ function updatePlayer(dt) {
     if (keys.ArrowDown || keys.KeyS) mz += 1;
   }
   const len = Math.hypot(mx, mz);
-  const speed = 5.2;
+  const speed = 5.2 * (state.stage.flags.speedMul || 1);
   if (len > 0) {
     mx /= len; mz /= len;
     const pos = pl.root.position;
