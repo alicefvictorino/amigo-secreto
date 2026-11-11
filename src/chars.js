@@ -204,7 +204,7 @@ export function makeCharacter(lookKey, overrides = {}) {
   // perna em duas partes: com saia, a coxa tem a cor da saia (aparece quando senta) e a canela fica de pele
   const hasSkirt = look.skirt !== undefined;
   const thighCol = hasSkirt ? look.skirt : look.pants;
-  const shinCol = hasSkirt ? (look.skirtLen === 'midi' || look.skirtLen === 'short' ? look.skin : look.skirt) : look.pants;
+  const shinCol = hasSkirt ? (look.skirtLen === 'midi' || look.skirtLen === 'short' ? look.skin : look.skirt) : (look.shorts ? look.skin : look.pants);
   const mkLeg = (x) => {
     const p = new THREE.Group(); p.position.set(x, 0.8, 0); body.add(p);
     part(0.28, 0.36, 0.3, thighCol, 0, -0.18, 0, p);

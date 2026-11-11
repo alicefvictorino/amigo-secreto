@@ -405,73 +405,187 @@ export const MEMORIES = [
     eliminates: ['nanda'],
     build(st, api) {
       st.engine = api;
-      st.floor(-17, 17, -13, 10, 0x6dbb4a, { checker: 0x66b244, tile: 2 });
-      lights(st, { sky: 0xcdeeff, ground: 0x4a7a2a, sun: 1.9, shadow: 22 });
-      // árvores na borda
-      [[-15, -10], [-11, -11.5], [-5, -11.8], [0, -11], [12, -11.5], [15.5, -8], [15.5, -2], [15, 4], [-15.5, -4], [-15.5, 1]].forEach(([x, z], i) => st.tree(x, z, { h: 2.6 + (i % 3) * 0.6, s: 1 + (i % 2) * 0.2 }));
-      // lago
-      st.box(-8.5, -0.15, 3.2, 7, 0.2, 4.6, 0x3aa0e0, { cast: false });
-      st.box(-8.5, -0.05, 3.2, 6.6, 0.1, 4.2, 0x5cc3ff, { cast: false, opacity: 0.85 });
-      st.solid(-12, -5, 0.9, 5.5);
-      // placa
-      st.box(-3.5, 0, -2.5, 0.2, 1.4, 0.2, 0x6b4a2b);
-      st.box(-1.5, 0, -2.5, 0.2, 1.4, 0.2, 0x6b4a2b);
-      st.sign('VALE ENCANTADO', -2.5, 1.7, -2.4, 3.2, 0.8, { bg: '#7a5230', fg: '#fff4e0' });
-      st.solid(-3.7, -1.3, -2.7, -2.3);
+      st.floor(-12, 12, -9, 9, 0x6dbb4a, { checker: 0x66b244, tile: 1.5 });
+      lights(st, { sky: 0xcdeeff, ground: 0x4a7a2a, sun: 1.9, shadow: 16 });
+
+      // mata em volta (só nos fundos e nas laterais, para não tapar a câmera)
+      [[-11, -8], [-8, -8.6], [-1, -8.4], [2.5, -8.6], [10.8, -8.2], [11.2, -4], [11.4, 0.5], [-11.4, 2], [-11, 6]].forEach(([x, z], i) => st.tree(x, z, { h: 2.4 + (i % 3) * 0.7, s: 0.9 + (i % 2) * 0.3 }));
+      st.palm(-10.5, -5.5, 5.5); st.palm(9.6, -7.2, 6); st.palm(11.2, 4.5, 5);
+      [[-9, 8.4], [4.5, 8.6], [-3.5, 8.7]].forEach(([x, z]) => { st.box(x, 0, z, 1.4, 0.7, 0.9, 0x3f8f3a); st.box(x + 0.4, 0.5, z, 0.9, 0.5, 0.7, 0x4aa040); });
+
+      // a grande árvore (com terra e folhas em volta)
+      const TX = -5, TZ = -5.6;
+      st.box(TX + 0.6, -0.17, TZ + 0.8, 5.2, 0.2, 4.2, 0x8a6a45, { cast: false });
+      st.box(TX, 0, TZ, 1.3, 3.6, 1.3, 0x7a5a3c, { solid: true });
+      const branch = (x1, y1, z1, x2, y2, z2, t) => rope(st, new THREE.Vector3(x1, y1, z1), new THREE.Vector3(x2, y2, z2), t, 0x6e5034);
+      branch(TX, 3.4, TZ, TX - 2.4, 5.6, TZ - 1.2, 0.6);
+      branch(TX, 3.4, TZ, TX + 2.6, 5.4, TZ - 0.8, 0.55);
+      branch(TX, 3.0, TZ, TX + 2.0, 4.1, TZ - 0.4, 0.4);
+      branch(TX, 3.6, TZ, TX + 0.4, 6.0, TZ - 2.0, 0.5);
+      [[0, 5.6, -1.6, 4.4, 1.6, 3.6], [-2.6, 5.4, -1.0, 3.4, 1.4, 3.2], [2.4, 5.2, -0.6, 3.4, 1.4, 3.0], [0.2, 6.6, -1.8, 3.0, 1.1, 2.6], [-1.2, 5.0, 0.6, 2.4, 0.9, 1.8]].forEach(([dx, y, dz, w, h, d]) => st.box(TX + dx, y, TZ + dz, w, h, d, 0x3d8a33));
+
+      // ponte de madeira saindo da árvore para a esquerda
+      for (let x = TX - 0.8; x > -12; x -= 0.55) st.box(x, 2.6, TZ + 0.1, 0.45, 0.08, 1.0, 0xa77b4f);
+      rope(st, new THREE.Vector3(TX - 0.6, 3.4, TZ - 0.45), new THREE.Vector3(-12, 3.3, TZ - 0.45), 0.05, 0xd9b26b);
+      rope(st, new THREE.Vector3(TX - 0.6, 3.4, TZ + 0.65), new THREE.Vector3(-12, 3.3, TZ + 0.65), 0.05, 0xd9b26b);
+      [-8.4, -11.2].forEach(x => { st.box(x, 0, TZ - 0.45, 0.2, 2.6, 0.2, 0x7a5a3c); st.box(x, 0, TZ + 0.65, 0.2, 2.6, 0.2, 0x7a5a3c); });
+      for (let x = TX - 1.0; x > -12; x -= 1.1) { rope(st, new THREE.Vector3(x, 2.65, TZ - 0.45), new THREE.Vector3(x, 3.35, TZ - 0.45), 0.04, 0xd9b26b); rope(st, new THREE.Vector3(x, 2.65, TZ + 0.65), new THREE.Vector3(x, 3.35, TZ + 0.65), 0.04, 0xd9b26b); }
+
+      // balanço de madeira num dos galhos
+      const SW = new THREE.Vector3(TX + 1.8, 4.05, TZ - 0.35);
+      const swing = new THREE.Group(); swing.position.copy(SW); st.add(swing);
+      const swingLen = 3.45;
+      [[-0.35], [0.35]].forEach(([dx]) => { const r = new THREE.Mesh(BOX, mat(0xd9b26b)); r.scale.set(0.04, swingLen, 0.04); r.position.set(dx, -swingLen / 2, 0); swing.add(r); });
+      const seat = new THREE.Mesh(BOX, mat(0xa77b4f)); seat.scale.set(0.9, 0.08, 0.4); seat.position.set(0, -swingLen, 0); seat.castShadow = true; swing.add(seat);
+      let swingT = 0, swinging = false;
+      st.updaters.push((dt) => { swingT += dt; if (!swinging) swing.rotation.x = Math.sin(swingT * 1.3) * 0.06; });
+      api.interact({
+        x: SW.x, z: SW.z + 0.6, r: 1.5, label: 'Balançar', once: false,
+        onInteract: async () => {
+          const pl = api.player;
+          swinging = true;
+          pl.anim.mode = 'sit';
+          pl.root.rotation.y = 0;
+          const start = performance.now();
+          await new Promise(res => {
+            const step = () => {
+              const t = (performance.now() - start) / 1000;
+              const a = Math.sin(t * 2.4) * 0.55 * Math.min(1, t) * Math.max(0, Math.min(1, (4.5 - t)));
+              swing.rotation.x = a;
+              pl.root.position.set(SW.x, SW.y - Math.cos(a) * swingLen - 0.38, SW.z + Math.sin(a) * swingLen + 0.1);
+              if (t < 4.5) requestAnimationFrame(step); else res();
+            };
+            step();
+          });
+          swinging = false;
+          pl.anim.mode = 'idle';
+          pl.root.position.set(SW.x, 0, SW.z + 1.0);
+        },
+      });
+
+      // rio com vitórias-régias, da árvore até a frente
+      const river = [[-5.0, -4.6], [-5.6, -2.0], [-6.5, 0.6], [-6.2, 3.2], [-6.9, 5.8], [-7.6, 9.0]];
+      const W = 2.8;
+      const waterMat = new THREE.MeshPhongMaterial({ color: 0x6a4f30, specular: 0xbfe0f0, shininess: 90, emissive: 0x241a0c });
+      st.disposables.push(waterMat);
+      for (let i = 0; i < river.length - 1; i++) {
+        const [x1, z1] = river[i], [x2, z2] = river[i + 1];
+        const len = Math.hypot(x2 - x1, z2 - z1);
+        const m = st.box((x1 + x2) / 2, -0.12, (z1 + z2) / 2, W + (i === 0 ? 1.4 : 0), 0.14, len + 0.6, 0x5b4630, { cast: false, rotY: Math.atan2(x2 - x1, z2 - z1) });
+        m.material = waterMat;
+        const sky = st.box((x1 + x2) / 2, 0.025, (z1 + z2) / 2, W + (i === 0 ? 1.4 : 0) - 0.2, 0.01, len - 0.05, 0x9fd0ea, { cast: false, opacity: 0.32, rotY: Math.atan2(x2 - x1, z2 - z1) });
+        sky.receiveShadow = false;
+        // reflexos claros na água
+        for (let k = 0.6; k < len; k += 1.3) { const t = k / len; st.box(x1 + (x2 - x1) * t + ((k * 7) % 1 - 0.5), 0.03, z1 + (z2 - z1) * t, 0.9, 0.01, 0.08, 0xcfe6f2, { cast: false, opacity: 0.55 }); }
+        for (let k = 0; k <= len; k += 0.8) { const t = k / len; const cx = x1 + (x2 - x1) * t, cz = z1 + (z2 - z1) * t; st.solid(cx - W * 0.42, cx + W * 0.42, cz - 0.5, cz + 0.5); }
+      }
+      const pad = new THREE.CylinderGeometry(0.42, 0.42, 0.03, 10);
+      const pads = [];
+      [[-5.4, -3], [-5.9, -1.2], [-6.6, 0.3], [-6.0, 1.8], [-6.7, 2.6], [-6.4, 4.2], [-7.0, 5.4], [-7.4, 7.0], [-6.1, -0.2], [-7.1, 3.6], [-4.4, -4.2], [-6.0, -3.4], [-5.2, -1.9], [-7.3, 1.2], [-6.3, 6.4], [-7.9, 8.0]].forEach(([x, z], i) => {
+        const p = new THREE.Mesh(pad, mat(i % 3 ? 0x6cb84a : 0x58a63a)); p.position.set(x, 0.05, z); st.add(p); pads.push(p);
+        if (i % 3 === 0) st.box(x + 0.1, 0.05, z, 0.16, 0.14, 0.16, 0xf7b6d2, { cast: false });
+      });
+      st.updaters.push((dt, t) => pads.forEach((p, i) => { p.position.y = 0.05 + Math.sin(t * 1.5 + i) * 0.01; }));
 
       // rede de escalada
-      const x1 = 3.8, x2 = 8.6, zb = -4.4, zt = -7.3, yt = 5.6;
-      [3.5, 8.9].forEach(x => { st.box(x, 0, zt - 0.2, 0.35, yt + 1.2, 0.35, 0x7a5230, { solid: true }); st.box(x, 0, zt - 1.6, 0.35, yt, 0.35, 0x7a5230, { solid: true }); });
-      st.box(6.2, yt - 0.15, zt - 0.85, 5.8, 0.3, 1.9, 0xa0703f);
-      st.box(6.2, yt + 0.15, zt - 1.75, 5.8, 0.8, 0.1, 0xa0703f);
-      for (let x = x1; x <= x2 + 0.01; x += 0.6) rope(st, new THREE.Vector3(x, 0.05, zb), new THREE.Vector3(x, yt, zt), 0.07, 0xd9b26b);
-      for (let k = 0; k <= 1.0001; k += 0.11) {
-        const y = 0.05 + (yt - 0.05) * k, z = zb + (zt - zb) * k;
-        rope(st, new THREE.Vector3(x1, y, z), new THREE.Vector3(x2, y, z), 0.07, 0xd9b26b);
+      const x1 = 3.9, x2 = 8.4, zb = -4.4, zt = -7.2, yt = 5.2;
+      [3.6, 8.7].forEach(x => { st.box(x, 0, zt - 0.2, 0.45, yt + 1.6, 0.45, 0x7a5a3c, { solid: true }); st.box(x, yt + 1.2, zt - 0.2, 1.8, 1.0, 1.6, 0x3d8a33); });
+      const P = (u, v) => new THREE.Vector3(x1 + (x2 - x1) * u, 0.05 + (yt - 0.05) * v, zb + (zt - zb) * v);
+      // trama em losango: duas famílias de cordas diagonais
+      for (let c = -1; c <= 2.001; c += 0.14) {
+        const a0 = Math.max(0, -c), a1 = Math.min(1, 1 - c);
+        if (a1 - a0 > 0.02) rope(st, P(c + a0, a0), P(c + a1, a1), 0.06, 0xd9b26b);
+        const b0 = Math.max(0, c - 1), b1 = Math.min(1, c);
+        if (b1 - b0 > 0.02) rope(st, P(c - b0, b0), P(c - b1, b1), 0.06, 0xd9b26b);
       }
-      st.solid(x1 - 0.2, x2 + 0.2, zt - 1.8, zb - 0.6);
+      rope(st, P(0, 1), P(1, 1), 0.08, 0xc9a25b);
+      rope(st, P(0, 0), P(0, 1), 0.08, 0xc9a25b);
+      rope(st, P(1, 0), P(1, 1), 0.08, 0xc9a25b);
+      st.solid(x1 - 0.3, x2 + 0.3, zt - 0.5, zb - 0.5);
 
-      // coringas e a Alice num piquenique
-      st.box(-1.5, 0, 5.2, 3.2, 0.03, 2.2, 0xd7372f, { cast: false });
-      api.npc('alice', -2.4, 5.0, { sit: true, y: -0.35, rot: 0.4 });
-      api.npc('chinelo', -0.6, 5.4, { sit: true, y: -0.35, rot: -0.4 });
-      api.npc('yasmim', -1.5, 4.4, { rot: Math.PI });
+      // slackline da árvore até uma estaca de madeira
+      const slA = new THREE.Vector3(TX + 0.65, 0.62, -3.9), slB = new THREE.Vector3(7.4, 0.62, -2.9);
+      rope(st, slA, slB, 0.05, 0x2f6fae);
+      st.box(slB.x, 0, slB.z, 0.22, 0.75, 0.22, 0x7a5a3c, { solid: true });
 
-      const nanda = api.npc('nanda', 6.2, -3.3, {
-        label: 'Falar com Nanda',
+      // mesa de plástico e toalhas de praia
+      const tbl = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.75, 0.06, 16), mat(0xf4f4f4)); tbl.position.set(3.4, 0.74, 2.2); tbl.castShadow = true; st.add(tbl);
+      st.box(3.4, 0, 2.2, 0.12, 0.74, 0.12, 0xe8e8e8, { solid: true });
+      st.box(3.2, 0.77, 2.0, 0.14, 0.32, 0.14, 0x2f9e44); st.box(3.6, 0.77, 2.4, 0.12, 0.22, 0.12, 0xffffff, { opacity: 0.8 });
+      [[2.3, 2.2, Math.PI / 2], [4.5, 2.2, -Math.PI / 2], [3.4, 3.3, Math.PI]].forEach(([x, z, r]) => st.chair(x, z, r, 0xf2f2f2));
+      const towel = (x, z, base, stripe) => { st.box(x, 0, z, 2.3, 0.03, 1.4, base, { cast: false }); for (let k = -1; k <= 1; k++) st.box(x + k * 0.7, 0.01, z, 0.18, 0.03, 1.4, stripe, { cast: false }); };
+      towel(-1.4, 5.2, 0x2a5fb0, 0xffffff);
+      towel(1.6, 5.3, 0xf4f4f4, 0xe0562c);
+      st.box(-2.9, 0, 4.7, 0.5, 0.45, 0.3, 0x2b2b2b); st.box(0.2, 0, 6.3, 0.6, 0.3, 0.35, 0xf2c230); st.box(3.0, 0, 6.0, 0.25, 0.4, 0.25, 0xd7372f);
+
+      // trilha e placa
+      for (let i = 0; i < 6; i++) st.box(10.6 - i * 0.9, -0.17, 8.6 - i * 0.8, 1.3, 0.2, 1.1, 0xb08a5a, { cast: false });
+      st.box(7.7, 0, 7.7, 0.15, 1.3, 0.15, 0x6b4a2b); st.box(9.5, 0, 7.7, 0.15, 1.3, 0.15, 0x6b4a2b);
+      st.sign('VALE ENCANTADO', 8.6, 1.55, 7.75, 2.6, 0.65, { bg: '#7a5230', fg: '#fff4e0' });
+
+      // quem pode ser identificado: Alice, Chinelo e Yasmim; Nanda sai aqui
+      const SUMMER = (shirt, pants) => ({ shirt, pants, shorts: true, sleeveless: true });
+      api.npc('alice', -1.9, 5.0, { sit: true, y: -0.35, rot: 0.2, look: SUMMER(0xff6f91, 0x1c1c1c) });
+      api.npc('chinelo', 2.2, 5.1, { sit: true, y: -0.35, rot: -0.25, look: SUMMER(0x2a9d8f, 0x3b3b3b) });
+
+      // Yasmim andando no slackline
+      const yas = api.npc('yasmim', slA.x + 2, -3.6, { solid: false, facePlayer: false, look: { shirt: 0x151515, pants: 0x151515, sleeveless: true } });
+      yas.ch.holdArms = true;
+      yas.ch.parts.armL.rotation.z = -1.6; yas.ch.parts.armR.rotation.z = 1.6;
+      yas.moving = true;
+      let yt2 = 0, dir = 1;
+      st.updaters.push((dt, t) => {
+        yt2 += dt * 0.09 * dir;
+        if (yt2 > 0.85) dir = -1; else if (yt2 < 0.15) dir = 1;
+        const p = slA.clone().lerp(slB, yt2);
+        yas.root.position.set(p.x, p.y + 0.02 + Math.sin(t * 6) * 0.02, p.z);
+        yas.root.rotation.y = Math.atan2((slB.x - slA.x) * dir, (slB.z - slA.z) * dir);
+        yas.root.rotation.z = Math.sin(t * 2.3) * 0.07;
+      });
+
+      // quem estava lá mas ainda não pode ser identificado (Breno, Dudão, Flora, Nala): bonecos cinza
+      const grey = { name: '', label: 'Quem é?', once: false, lines: [{ who: 'thought', text: 'Ainda não sei quem é.' }] };
+      api.npc('boneco', -0.6, 5.5, { ...grey, sit: true, y: -0.35, rot: 0 });
+      api.npc('boneco', 1.0, 5.6, { ...grey, sit: true, y: -0.35, rot: 0.1 });
+      api.npc('boneco', 2.3, 2.2, { ...grey, sit: true, y: 0.1, rot: Math.PI / 2 });
+      api.npc('boneco', 4.5, 2.2, { ...grey, sit: true, y: 0.1, rot: -Math.PI / 2 });
+
+      const nanda = api.npc('nanda', 6.2, -3.6, {
+        label: 'Falar com Nanda', look: SUMMER(0xf28c38, 0x7a3b6e),
         lines: [{ text: 'Vamos subir comigo?' }],
         onInteract: async (n) => {
           const pl = api.player;
-          // os dois sobem a rede
           n.collider.on = false;
-          pl.root.position.set(5.4, 0, zb + 0.2); n.root.position.set(7.0, 0, zb + 0.2);
+          const v = 0.8;
+          pl.root.position.copy(P(0.38, 0)).setY(0); pl.root.position.z += 0.25;
+          n.root.position.copy(P(0.62, 0)).setY(0); n.root.position.z += 0.25;
           pl.root.rotation.y = Math.PI; n.root.rotation.y = Math.PI; n.moving = true;
           pl.anim.mode = 'climb'; n.ch.anim.mode = 'climb';
+          const top1 = P(0.38, v), top2 = P(0.62, v);
           await Promise.all([
-            api.tween(pl.root.position, { y: yt, z: zt - 0.5 }, 3600),
-            api.tween(n.root.position, { y: yt, z: zt - 0.5 }, 3300),
+            api.tween(pl.root.position, { y: top1.y - 1.4, z: top1.z + 0.35 }, 3600),
+            api.tween(n.root.position, { y: top2.y - 1.4, z: top2.z + 0.35 }, 3300),
           ]);
-          pl.anim.mode = 'idle'; n.ch.anim.mode = 'idle'; n.moving = false;
-          pl.root.rotation.y = 0; n.root.rotation.y = 0;
           await api.eliminate('nanda');
           await api.thought('Daqui de cima dá pra ver tudo.');
           await api.fade(1, 500);
-          pl.root.position.set(6.2, 0, -2.0); pl.root.rotation.y = 0;
-          n.root.position.set(4.6, 0, -2.6);
-          n.collider.minX = 4.2; n.collider.maxX = 5.0; n.collider.minZ = -3.0; n.collider.maxZ = -2.2; n.collider.on = true;
+          pl.anim.mode = 'idle'; n.ch.anim.mode = 'idle'; n.moving = false;
+          pl.root.position.set(6.2, 0, -2.6); pl.root.rotation.y = 0;
+          n.root.position.set(4.7, 0, -3.3); n.root.rotation.y = 0.3;
+          n.collider.minX = 4.3; n.collider.maxX = 5.1; n.collider.minZ = -3.7; n.collider.maxZ = -2.9; n.collider.on = true;
           await api.fade(0, 500);
           await api.complete('Não sou Nanda. Mas subi junto.');
         },
       });
       nanda.ambient = 'Bora?';
-      api.exit(-14.6, 6.6, { rotY: Math.PI / 2 });
+      api.exit(10.2, 7.4, { rotY: -2.36 });
 
       return {
-        bounds: { minX: -16, maxX: 16, minZ: -12, maxZ: 9 },
-        spawn: { x: -8, z: 6.6, rot: Math.PI / 2 },
-        camClamp: { minX: -9, maxX: 9, minZ: -5, maxZ: 3 },
+        bounds: { minX: -11, maxX: 11.3, minZ: -8, maxZ: 8.6 },
+        spawn: { x: 9.2, z: 6.6, rot: -2.36 },
+        camClamp: { minX: -4, maxX: 4.5, minZ: -2.5, maxZ: 4.2 },
         background: 0x9fd8ff,
-        fog: { color: 0x9fd8ff, near: 30, far: 70 },
+        fog: { color: 0x9fd8ff, near: 28, far: 60 },
         music: 'calmo',
       };
     },
