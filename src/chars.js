@@ -17,7 +17,7 @@ export const LOOKS = {
   analuz:  { skin: 0xe2b48c, hair: 0x3b2416, hairStyle: 'long', shirt: 0x6fa8dc, pants: 0x34495e },
   breno:   { skin: 0xd9a77c, hair: 0x2a1b10, hairStyle: 'short', shirt: 0x3d7a4f, pants: 0x2c3e50 },
   dudao:   { skin: 0xc68e62, hair: 0x2a1a10, hairStyle: 'bun', shirt: 0xe67e22, pants: 0x1f3a5f },
-  flora:   { skin: 0xf0c8a0, hair: 0x7a3e1d, hairStyle: 'long', shirt: 0x8e44ad, pants: 0x222222 },
+  flora:   { skin: 0xefc7a8, hair: 0x2a1214, hairStyle: 'bob', streaks: 0xb3122a, shirt: 0x8e44ad, pants: 0x222222 },
   hanna:   { skin: 0xe8b896, hair: 0x6b4226, hairStyle: 'bun', shirt: 0xf4a6b8, pants: 0x3a3a5a },
   nala:    { skin: 0xd9a582, hair: 0x2a1a12, hairStyle: 'long', shirt: 0x7fb24a, pants: 0x2d2d2d },
   nanda:   { skin: 0xf0cfb4, hair: 0x2a1810, hairStyle: 'long', shirt: 0xf4f0e8, pants: 0x2c3e50 },
@@ -84,6 +84,20 @@ function buildHair(style, color, head) {
       part(0.18, 0.85, 0.66, c, 0.42, -0.02, -0.08, g);
       part(0.7, 0.12, 0.1, c, 0, 0.28, 0.31, g);
       break;
+    case 'bob':
+      part(0.78, 0.3, 0.76, c, 0, 0.36, -0.02, g);
+      part(0.8, 0.62, 0.2, c, 0, 0.0, -0.33, g);
+      part(0.16, 0.6, 0.62, c, -0.38, 0.02, -0.04, g);
+      part(0.16, 0.6, 0.62, c, 0.38, 0.02, -0.04, g);
+      part(0.66, 0.12, 0.08, c, 0, 0.27, 0.31, g);
+      break;
+    case 'braids':
+      part(0.66, 0.14, 0.66, c, 0, 0.33, 0, g);
+      part(0.66, 0.4, 0.1, c, 0, 0.12, -0.3, g);
+      [-0.27, -0.09, 0.09, 0.27].forEach(x => part(0.1, 1.2, 0.1, c, x, -0.42, -0.34, g));
+      part(0.1, 0.9, 0.1, c, -0.36, -0.3, 0.12, g);
+      part(0.1, 0.9, 0.1, c, 0.36, -0.3, 0.12, g);
+      break;
     case 'ponytail':
       part(0.66, 0.14, 0.66, c, 0, 0.33, 0, g);
       part(0.66, 0.42, 0.1, c, 0, 0.12, -0.3, g);
@@ -134,6 +148,26 @@ function addExtra(name, ch) {
       head.add(cone);
       break;
     }
+    case 'wings': {
+      // asas de fada (cor em ch.look.wingColor)
+      const wc = ch.look.wingColor ?? 0xff8fc7;
+      [-1, 1].forEach(sd => {
+        const w1 = part(0.05, 0.75, 0.55, wc, sd * 0.35, 0.15, -0.38, torso, { opacity: 0.6 }); w1.rotation.y = sd * 0.9; w1.rotation.z = sd * -0.35;
+        const w2 = part(0.05, 0.45, 0.38, wc, sd * 0.3, -0.3, -0.36, torso, { opacity: 0.6 }); w2.rotation.y = sd * 0.9; w2.rotation.z = sd * 0.3;
+      });
+      break;
+    }
+    case 'bandana': {
+      const bc = ch.look.bandanaColor ?? 0xd7262e;
+      part(0.66, 0.16, 0.66, bc, 0, 0.36, 0, head);
+      part(0.62, 0.1, 0.62, bc, 0, 0.27, -0.01, head);
+      part(0.16, 0.2, 0.1, bc, 0, 0.2, -0.36, head);
+      break;
+    }
+    case 'chain':
+      part(0.3, 0.05, 0.03, 0xf2c230, 0, 0.26, 0.2, torso);
+      part(0.05, 0.12, 0.03, 0xf2c230, 0, 0.18, 0.2, torso);
+      break;
     case 'mask':
       part(0.62, 0.14, 0.04, 0x8e44ad, 0, 0.07, 0.31, head);
       break;
@@ -285,8 +319,21 @@ export function makeCharacter(lookKey, overrides = {}) {
   parts.face = face;
 
   parts.hair = buildHair(look.hairStyle, look.hair, head);
+  if (look.streaks !== undefined) {
+    part(0.12, 0.5, 0.06, look.streaks, -0.3, 0.12, 0.31, head);
+    part(0.12, 0.5, 0.06, look.streaks, 0.3, 0.12, 0.31, head);
+    part(0.3, 0.1, 0.07, look.streaks, -0.16, 0.3, 0.31, head);
+  }
+  if (look.jacket !== undefined) {
+    // jaqueta aberta: corpo e mangas na cor da jaqueta, blusa aparecendo no meio
+    part(0.24, 0.76, 0.42, look.jacket, -0.22, 0, 0, torso);
+    part(0.24, 0.76, 0.42, look.jacket, 0.22, 0, 0, torso);
+    part(0.7, 0.76, 0.1, look.jacket, 0, 0, -0.17, torso);
+    [parts.armL, parts.armR].forEach(a => { part(0.23, 0.52, 0.27, look.jacket, 0, -0.2, 0, a); part(0.21, 0.24, 0.25, look.jacket, 0, -0.5, 0, a); });
+  }
 
   const ch = { root, body, parts, look, lookKey, anim: { t: Math.random() * 10, walk: 0, mode: 'idle' } };
+  ch.look = look;
   (look.extras || []).forEach(e => addExtra(e, ch));
   (overrides.addExtras || []).forEach(e => addExtra(e, ch));
   root.userData.character = ch;

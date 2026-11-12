@@ -653,40 +653,96 @@ export const MEMORIES = [
     eliminates: ['flora'],
     build(st, api) {
       st.engine = api;
-      st.floor(-10, 10, -7, 6, 0x3a2f5b, { checker: 0x463a6b, tile: 1 });
-      st.room({ minX: -10, maxX: 10, minZ: -7, maxZ: 6, color: 0x2f2a45, trim: 0xff4fa0, gaps: { w: [[2, 4]] } });
-      lights(st, { hemi: 0.9, sun: 0.7, sky: 0xd8c8ff, ground: 0x2a1a3a, shadow: 16 });
-      const pinks = [point(st, -6, 3, -3, 0xff4fa0, 10, 14), point(st, 6, 3, -3, 0x4fd8ff, 10, 14), point(st, 0, 3, 3, 0xffd34f, 8, 14)];
-      st.updaters.push((dt, t) => pinks.forEach((l, i) => { l.intensity = 7 + Math.sin(t * 3 + i * 2) * 4; }));
-      st.sign('FELIZ ANIVERSÁRIO!', 0, 2.7, -6.78, 7, 1.1, { bg: '#ff4fa0', fg: '#fff4e0' });
-      stringLights(st, -9.5, 9.5, -6.7, 3.6);
+      const X = 5.2, ZN = -3.8, ZS = 3.6;
+      st.floor(-X, X, ZN, ZS, 0xe6e0d6, { checker: 0xdcd5c9, tile: 1 });
+      // paredes com painel de madeira, como no salão das fotos
+      st.room({ minX: -X, maxX: X, minZ: ZN, maxZ: ZS, h: 3.2, color: 0x8b4f2a });
+      for (let x = -X + 0.6; x < X; x += 0.6) st.box(x, 0, ZN + 0.21, 0.04, 3.2, 0.02, 0x6e3c1e, { cast: false });
+      for (let z = ZN + 0.6; z < ZS - 0.4; z += 0.6) st.box(X - 0.21, 0, z, 0.02, 3.2, 0.04, 0x6e3c1e, { cast: false });
+      lights(st, { hemi: 1.0, sun: 0.6, shadow: 9 });
+      point(st, 0, 3.0, 0, 0xffe6c0, 5, 10);
+      const blue = point(st, -3.9, 2.2, 0, 0x5a6bff, 9, 7);
+      st.updaters.push((dt, t) => { blue.intensity = 8 + Math.sin(t * 2) * 2; });
+
+      // mesa com o bolo, espelho na parede e ar-condicionado em cima
+      st.table(0, -3.05, 2.6, 0.95, 0x8a5a3c);
+      st.mirror(0, 1.8, ZN + 0.22, 2.2, 1.2, 0);
+      st.box(0, 2.72, ZN + 0.36, 1.5, 0.38, 0.3, 0xffffff);
+      st.box(0, 2.76, ZN + 0.52, 1.3, 0.04, 0.02, 0x9a9a9a, { cast: false });
+
+      // o bolo despedaçado: parte de baixo sem um pedaço, andar de cima escorregando, velas de "19"
+      const CH = 0x5a3420, CR = 0xfff3e6, PK = 0xff6fa8, top = 0.85;
+      const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.75, 0.03, 20), mat(0xffffff)); plate.position.set(-0.1, top + 0.015, -3.1); st.add(plate);
+      [[-0.5, -3.35], [-0.08, -3.35], [0.34, -3.35], [-0.5, -2.95], [-0.08, -2.95]].forEach(([x, z]) => {
+        st.box(x, top + 0.03, z, 0.42, 0.36, 0.4, CH);
+        st.box(x, top + 0.39, z, 0.42, 0.06, 0.4, CR);
+      });
+      st.box(0.36, top + 0.03, -2.92, 0.3, 0.16, 0.26, CH); // restinho do pedaço que caiu
+      st.box(-0.29, top + 0.12, -2.73, 0.2, 0.22, 0.04, CR, { cast: false }); // cobertura escorrendo
+      st.box(0.12, top + 0.2, -2.73, 0.12, 0.16, 0.04, CR, { cast: false });
+      const tier = st.box(0.05, top + 0.45, -3.2, 0.7, 0.28, 0.5, CH);
+      tier.rotation.z = -0.32; tier.position.x += 0.15;
+      const tierTop = st.box(0.05, top + 0.73, -3.2, 0.7, 0.05, 0.5, CR); tierTop.rotation.z = -0.32; tierTop.position.x += 0.06; tierTop.position.y -= 0.03;
+      [[-0.45, -3.42], [-0.2, -3.42], [-0.45, -3.0]].forEach(([x, z]) => st.box(x, top + 0.45, z, 0.08, 0.08, 0.08, PK, { cast: false }));
+      // velas de número "19"
+      const DIG = { '1': ['.X.', 'XX.', '.X.', '.X.', 'XXX'], '9': ['XXX', 'X.X', 'XXX', '..X', 'XXX'] };
+      const flames = [];
+      const V = 0.08;
+      [['1', -0.66], ['9', -0.34]].forEach(([d, x0]) => {
+        DIG[d].forEach((row, r) => [...row].forEach((ch, c) => { if (ch === 'X') st.box(x0 + c * V, top + 0.45 + (4 - r) * V, -3.05, V, V, 0.06, 0xf2c230, { cast: false, emissive: 0x6a4a00, ei: 0.4 }); }));
+        flames.push(st.box(x0 + V, top + 0.45 + 5 * V + 0.02, -3.05, 0.06, 0.1, 0.06, 0xffb02e, { emissive: 0xff9a1e, ei: 2, cast: false }));
+      });
+      const candleLight = point(st, -0.4, top + 1.1, -3.0, 0xffa64d, 2, 4);
+      st.updaters.push((dt, t) => { flames.forEach((f, i) => { f.scale.y = 0.1 * (1 + Math.sin(t * 17 + i) * 0.25); }); candleLight.intensity = 1.8 + Math.sin(t * 13) * 0.4; });
+      // pedaço caído no chão, com cobertura espalhada e farelos
+      const chunk1 = st.box(0.75, 0, -2.25, 0.42, 0.34, 0.38, CH); chunk1.rotation.set(0.25, 0.6, 0.35);
+      const chunk2 = st.box(1.15, 0, -1.95, 0.3, 0.22, 0.26, CH); chunk2.rotation.set(-0.3, 0.2, 0.5);
+      st.box(0.9, 0, -2.1, 0.9, 0.02, 0.7, CR, { cast: false });
+      for (let i = 0; i < 14; i++) st.box(0.3 + ((i * 0.37) % 1) * 1.3, 0, -2.6 + ((i * 0.61) % 1) * 1.0, 0.07, 0.05, 0.07, i % 3 ? CH : PK, { cast: false });
+
+      // painel "FLORA FAZ 19" num cavalete, com balões
+      st.box(-3.1, 0, -3.0, 0.08, 1.0, 0.08, 0x6b4a2b);
+      st.box(-3.1, 0, -2.75, 0.06, 1.0, 0.06, 0x6b4a2b);
+      st.sign('FLORA\nFAZ 19', -3.1, 1.6, -2.95, 1.6, 1.1, { bg: '#ff4fa0', fg: '#fff4e0', border: '#f2c230' });
       const cols = [0xff4fa0, 0x4fd8ff, 0xffd34f, 0x9b59b6, 0x2ecc71];
-      [[-8.8, -6], [-7.6, -6.2], [8.6, -6], [7.4, -6.3], [-9.2, 4.8], [9.1, 4.6], [-3.6, -6.3], [3.6, -6.3]].forEach(([x, z], i) => balloon(st, x, z, cols[i % cols.length], 2.4 + (i % 3) * 0.3));
+      [[-4.3, -3.3], [-4.5, -2.8], [3.6, -3.3], [3.9, -2.9], [4.7, -0.5]].forEach(([x, z], i) => balloon(st, x, z, cols[i % cols.length], 2.2 + (i % 3) * 0.3));
 
-      // mesa e o bolo estragado
-      st.table(0, -3.6, 3.2, 1.4, 0xf3f3f3);
-      st.box(0, 0.85, -3.6, 1.3, 0.45, 1.1, 0x9bb36a);
-      st.box(0, 1.3, -3.6, 0.85, 0.35, 0.75, 0x8fa35a);
-      [[-0.4, 1.12, -3.0], [0.3, 1.2, -3.0], [0.15, 1.5, -3.3], [-0.2, 1.66, -3.6], [0.5, 1.0, -3.1]].forEach(([x, y, z]) => st.box(x, y, z, 0.12, 0.08, 0.06, 0x3a4a1a, { cast: false }));
-      st.box(0.2, 1.65, -3.6, 0.05, 0.25, 0.05, 0xffffff);
-      st.box(-0.2, 1.65, -3.5, 0.05, 0.22, 0.05, 0xffffff);
-      const flies = [];
-      for (let i = 0; i < 6; i++) flies.push(st.box(0, 2, -3.6, 0.07, 0.05, 0.07, 0x111111, { cast: false }));
-      st.updaters.push((dt, t) => flies.forEach((f, i) => { const a = t * (2 + i * 0.4) + i; f.position.set(Math.cos(a) * (0.6 + i * 0.08), 2.0 + Math.sin(a * 1.7) * 0.25, -3.6 + Math.sin(a) * (0.5 + i * 0.05)); }));
+      // cortina prateada para fotos na parede da esquerda
+      const tinsel = [];
+      const tm = [new THREE.MeshPhongMaterial({ color: 0xc9d3e6, specular: 0xffffff, shininess: 120, emissive: 0x1a2040 }), new THREE.MeshPhongMaterial({ color: 0x8aa4ff, specular: 0xffffff, shininess: 120, emissive: 0x141a50 })];
+      tm.forEach(m => st.disposables.push(m));
+      for (let layer = 0; layer < 2; layer++) for (let z = -2.6; z <= 2.6; z += 0.07) {
+        const m = new THREE.Mesh(BOX, tm[(Math.floor(z * 14) + layer) % 2 ? 1 : 0]);
+        m.scale.set(0.02, 2.75, 0.045); m.position.set(-X + 0.28 + layer * 0.1, 0.05 + 1.375, z); st.add(m); tinsel.push(m);
+      }
+      st.box(-X + 0.32, 2.85, 0, 0.12, 0.08, 5.4, 0x9a9a9a);
+      st.updaters.push((dt, t) => tinsel.forEach((m, i) => { m.rotation.x = Math.sin(t * 1.6 + i * 0.7) * 0.03; }));
 
-      // quem já saiu da lista + coringas, todos fantasiados
+      // mesa redonda com cadeiras
+      const RT = new THREE.Vector3(2.8, 0, 2.0);
+      const rt = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.06, 18), mat(0xf1ede6)); rt.position.set(RT.x, 0.78, RT.z); rt.castShadow = true; st.add(rt);
+      st.box(RT.x, 0, RT.z, 0.12, 0.78, 0.12, 0x6b4a2b, { solid: true });
+      st.box(RT.x + 0.1, 0.81, RT.z - 0.1, 0.14, 0.2, 0.14, 0xffffff, { opacity: 0.8 });
+      const seats = [[RT.x - 1.0, RT.z, Math.PI / 2], [RT.x + 1.0, RT.z, -Math.PI / 2], [RT.x, RT.z - 1.0, 0], [RT.x, RT.z + 1.0, Math.PI]];
+      seats.forEach(([x, z, r]) => st.chair(x, z, r, 0x6b4a2b));
+
+      // quem estava lá mas ainda não pode ser identificado (Breno, Dudão, Nala): bonecos cinza na mesa
+      const grey = { name: '', label: 'Quem é?', once: false, lines: [{ who: 'thought', text: 'Ainda não sei quem é.' }] };
+      seats.slice(0, 3).forEach(([x, z, r]) => api.npc('boneco', x, z, { ...grey, sit: true, y: 0.1, rot: r }));
+
+      // fantasias (as de personagens de anime e série não são desenhadas; cada pessoa aparece com a roupa por baixo)
       const coro = [
-        api.npc('hanna', -2.6, -2.0, { extras: ['partyhat'], ambient: 'Clarice matou o bolo!' }),
-        api.npc('analuz', 2.6, -2.0, { extras: ['mask'], ambient: 'Clarice matou o bolo!' }),
-        api.npc('nanda', -3.4, -0.4, { extras: ['partyhat'], ambient: 'Clarice matou o bolo!' }),
-        api.npc('yasmim', 3.4, -0.4, { extras: ['mask'], ambient: 'Clarice matou o bolo!' }),
-        api.npc('chinelo', -1.8, 0.9, { extras: ['partyhat'] }),
-        api.npc('alice', 1.8, 0.9, { extras: ['partyhat'] }),
+        api.npc('hanna', -3.0, -0.6, { look: { shirt: 0xff8fc7, skirt: 0xff8fc7, skirtLen: 'short', sleeveless: true, wingColor: 0xff8fc7 }, extras: ['wings'], ambientR: 2.2, ambient: 'Clarice matou o bolo!' }),
+        api.npc('analuz', 3.4, -1.0, { extras: ['partyhat'], ambientR: 2.2, ambient: 'Clarice matou o bolo!' }),
+        api.npc('nanda', -1.9, 0.4, { look: { shirt: 0xf8f6f0, pants: 0xf8f6f0, sleeveless: true, streaks: 0xe8d27a }, ambientR: 2.2, ambient: 'Clarice matou o bolo!' }),
+        api.npc('yasmim', 1.5, 0.0, { look: { shirt: 0xf8f6f0, pants: 0x1c1c1c, sleeveless: true, hairStyle: 'braids', bandanaColor: 0xd7262e }, extras: ['bandana'], ambientR: 2.2, ambient: 'CLARICE MATOU O BOLO!' }),
       ];
-      const clarice = api.npc('clarice', 1.0, -1.6, { extras: ['cape'], ambient: 'Socorro!', ambientStyle: 'shout-sm' });
+      api.npc('alice', -3.9, 1.6, { rot: Math.PI / 2, look: { shirt: 0x151515, pants: 0x151515, sleeveless: true } });
+      api.npc('chinelo', -3.9, 2.6, { rot: Math.PI / 2, extras: ['chain'] });
+      const clarice = api.npc('clarice', 1.6, -1.5, { extras: ['partyhat'], ambient: 'Socorro!', ambientStyle: 'shout-sm' });
 
       api.interact({
-        x: 0, z: -2.5, r: 2.0, label: 'Ver o bolo',
+        x: 0.6, z: -2.2, r: 1.6, label: 'Ver o bolo',
         onInteract: async () => {
           await api.say([
             { who: coro[0], text: 'Clarice matou o bolo!', sim: [{ who: coro[1], text: 'Clarice matou o bolo!' }, { who: coro[3], text: 'CLARICE MATOU O BOLO!' }] },
@@ -695,18 +751,21 @@ export const MEMORIES = [
         },
       });
 
-      // Flora, a aniversariante (fantasia provisória)
-      api.npc('flora', -6.4, -4.4, {
-        extras: ['cape'], rot: 0.5, label: 'Falar com a aniversariante',
+      // Flora, a aniversariante, de jaqueta de couro
+      api.npc('flora', -1.5, -1.8, {
+        rot: 2.3, label: 'Falar com a aniversariante',
+        look: { shirt: 0x2a2a2a, pants: 0x3d5a8a, jacket: 0x161616 },
         lines: [{ text: 'Meu bolo...' }],
         onInteract: async () => { await api.eliminate('flora'); await api.complete('Não sou Flora. Mas lembro desse bolo.'); },
       });
-      api.exit(-9.6, 3, { rotY: Math.PI / 2 });
+      api.exit(X - 0.45, 2.9, { rotY: -Math.PI / 2, w: 1.4 });
 
       return {
-        bounds: { minX: -9.6, maxX: 9.6, minZ: -6.6, maxZ: 5.6 },
-        spawn: { x: 0, z: 4.4, rot: Math.PI },
-        camClamp: { minX: -3, maxX: 3, minZ: -1.5, maxZ: 1.5 },
+        bounds: { minX: -X + 0.6, maxX: X - 0.4, minZ: ZN + 0.4, maxZ: ZS - 0.4 },
+        spawn: { x: X - 1.2, z: 2.9, rot: -Math.PI / 2 },
+        camOffset: new THREE.Vector3(0, 7.2, 9.2),
+        camLook: new THREE.Vector3(0, 1.0, -1.0),
+        camClamp: { minX: -1.2, maxX: 1.2, minZ: -0.3, maxZ: 0.3 },
         background: 0x1a1428,
         music: 'festa',
       };
