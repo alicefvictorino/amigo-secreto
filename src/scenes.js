@@ -70,6 +70,44 @@ function balloon(st, x, z, color, y = 2.6) {
   rope(st, new THREE.Vector3(x, y, z), new THREE.Vector3(x + 0.1, 0.9, z + 0.1), 0.02, 0xdddddd);
 }
 
+// faz um personagem andar devagar por alguns pontos, parando um pouco em cada um.
+// para quando o boneco chega perto, para não atrapalhar a conversa nem prender ninguém.
+function wander(st, n, pts, { speed = 1.1, pause = [1.2, 3.2] } = {}) {
+  let i = 0, wait = pause[0] + Math.random() * (pause[1] - pause[0]);
+  const p = n.root.position;
+  const rest = () => pause[0] + Math.random() * (pause[1] - pause[0]);
+  st.updaters.push((dt) => {
+    const pl = st.engine && st.engine.player ? st.engine.player.root.position : null;
+    if (pl && Math.hypot(pl.x - p.x, pl.z - p.z) < 1.7) { n.moving = false; return; }
+    if (wait > 0) { wait -= dt; n.moving = false; return; }
+    const [tx, tz] = pts[i];
+    const dx = tx - p.x, dz = tz - p.z, d = Math.hypot(dx, dz);
+    if (d < 0.05) { i = (i + 1) % pts.length; wait = rest(); n.moving = false; return; }
+    const step = Math.min(d, speed * dt);
+    p.x += dx / d * step; p.z += dz / d * step;
+    n.root.rotation.y = Math.atan2(dx, dz);
+    n.moving = true;
+    if (n.collider) { n.collider.minX = p.x - 0.4; n.collider.maxX = p.x + 0.4; n.collider.minZ = p.z - 0.4; n.collider.maxZ = p.z + 0.4; }
+  });
+}
+
+// alterna poses de foto (gira o corpo e mexe os braços)
+function poser(st, n, poses, every = 2.6) {
+  const ch = n.ch; ch.holdArms = true;
+  const { armL, armR } = ch.parts;
+  let k = 0, t0 = Math.random() * every;
+  st.updaters.push((dt) => {
+    t0 += dt;
+    if (t0 > every) { t0 = 0; k = (k + 1) % poses.length; }
+    const ps = poses[k], f = Math.min(1, dt * 6);
+    n.root.rotation.y += (ps.rot - n.root.rotation.y) * f;
+    armR.rotation.x += ((ps.rx ?? 0) - armR.rotation.x) * f;
+    armR.rotation.z += ((ps.rz ?? 0.05) - armR.rotation.z) * f;
+    armL.rotation.x += ((ps.lx ?? 0) - armL.rotation.x) * f;
+    armL.rotation.z += ((ps.lz ?? -0.05) - armL.rotation.z) * f;
+  });
+}
+
 function stringLights(st, x1, x2, z, y, colors = [0xffd36b, 0xff6b6b, 0x6bd3ff, 0x9bff6b]) {
   rope(st, new THREE.Vector3(x1, y, z), new THREE.Vector3(x2, y, z), 0.03, 0x333333);
   let i = 0;
@@ -663,44 +701,49 @@ export const MEMORIES = [
       st.box(-X + 0.205, 0, (ZN + ZS) / 2, 0.02, 3.2, ZS - ZN - 0.4, 0xe8dcc8, { cast: false });
       lights(st, { hemi: 1.0, sun: 0.6, shadow: 9 });
       point(st, 0, 3.0, 0, 0xffe6c0, 5, 10);
-      const blue = point(st, -3.9, 2.2, 0, 0x7a5cff, 9, 7);
-      st.updaters.push((dt, t) => { blue.intensity = 8 + Math.sin(t * 2) * 2; });
+      const shine = point(st, -3.4, 2.4, 0.4, 0xe4ecff, 3, 6);
+      st.updaters.push((dt, t) => { shine.intensity = 2.6 + Math.sin(t * 2) * 0.8; });
 
-      // mesa com o bolo, espelho na parede e ar-condicionado em cima
-      st.table(0, -3.05, 2.6, 0.95, 0x8a5a3c);
-      st.mirror(0, 1.8, ZN + 0.22, 2.2, 1.2, 0);
+      // mesa grande com o bolo; atrás dela, espelho do chão até 2,4 m e ar-condicionado em cima
+      const TZ = -2.2, dz = TZ + 3.05;
+      st.table(0, TZ, 3.8, 1.3, 0x8a5a3c);
+      st.mirror(0, 1.2, ZN + 0.22, 2.4, 2.4, 0);
       st.box(0, 2.72, ZN + 0.36, 1.5, 0.38, 0.3, 0xffffff);
       st.box(0, 2.76, ZN + 0.52, 1.3, 0.04, 0.02, 0x9a9a9a, { cast: false });
 
       // o bolo despedaçado: parte de baixo sem um pedaço, andar de cima escorregando, velas de "19"
       const CH = 0x5a3420, CR = 0xfff3e6, PK = 0xff6fa8, top = 0.85;
-      const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.75, 0.03, 20), mat(0xffffff)); plate.position.set(-0.1, top + 0.015, -3.1); st.add(plate);
+      const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.75, 0.03, 20), mat(0xffffff)); plate.position.set(-0.1, top + 0.015, -3.1 + dz); st.add(plate);
       [[-0.5, -3.35], [-0.08, -3.35], [0.34, -3.35], [-0.5, -2.95], [-0.08, -2.95]].forEach(([x, z]) => {
-        st.box(x, top + 0.03, z, 0.42, 0.36, 0.4, CH);
-        st.box(x, top + 0.39, z, 0.42, 0.06, 0.4, CR);
+        st.box(x, top + 0.03, z + dz, 0.42, 0.36, 0.4, CH);
+        st.box(x, top + 0.39, z + dz, 0.42, 0.06, 0.4, CR);
       });
-      st.box(0.36, top + 0.03, -2.92, 0.3, 0.16, 0.26, CH); // restinho do pedaço que caiu
-      st.box(-0.29, top + 0.12, -2.73, 0.2, 0.22, 0.04, CR, { cast: false }); // cobertura escorrendo
-      st.box(0.12, top + 0.2, -2.73, 0.12, 0.16, 0.04, CR, { cast: false });
-      const tier = st.box(0.05, top + 0.45, -3.2, 0.7, 0.28, 0.5, CH);
+      st.box(0.36, top + 0.03, -2.92 + dz, 0.3, 0.16, 0.26, CH); // restinho do pedaço que caiu
+      st.box(-0.29, top + 0.12, -2.73 + dz, 0.2, 0.22, 0.04, CR, { cast: false }); // cobertura escorrendo
+      st.box(0.12, top + 0.2, -2.73 + dz, 0.12, 0.16, 0.04, CR, { cast: false });
+      const tier = st.box(0.05, top + 0.45, -3.2 + dz, 0.7, 0.28, 0.5, CH);
       tier.rotation.z = -0.32; tier.position.x += 0.15;
-      const tierTop = st.box(0.05, top + 0.73, -3.2, 0.7, 0.05, 0.5, CR); tierTop.rotation.z = -0.32; tierTop.position.x += 0.06; tierTop.position.y -= 0.03;
-      [[-0.45, -3.42], [-0.2, -3.42], [-0.45, -3.0]].forEach(([x, z]) => st.box(x, top + 0.45, z, 0.08, 0.08, 0.08, PK, { cast: false }));
+      const tierTop = st.box(0.05, top + 0.73, -3.2 + dz, 0.7, 0.05, 0.5, CR); tierTop.rotation.z = -0.32; tierTop.position.x += 0.06; tierTop.position.y -= 0.03;
+      [[-0.45, -3.42], [-0.2, -3.42], [-0.45, -3.0]].forEach(([x, z]) => st.box(x, top + 0.45, z + dz, 0.08, 0.08, 0.08, PK, { cast: false }));
       // velas de número "19"
       const DIG = { '1': ['.X.', 'XX.', '.X.', '.X.', 'XXX'], '9': ['XXX', 'X.X', 'XXX', '..X', 'XXX'] };
       const flames = [];
       const V = 0.08;
       [['1', -0.66], ['9', -0.34]].forEach(([d, x0]) => {
-        DIG[d].forEach((row, r) => [...row].forEach((ch, c) => { if (ch === 'X') st.box(x0 + c * V, top + 0.45 + (4 - r) * V, -3.05, V, V, 0.06, 0xf2c230, { cast: false, emissive: 0x6a4a00, ei: 0.4 }); }));
-        flames.push(st.box(x0 + V, top + 0.45 + 5 * V + 0.02, -3.05, 0.06, 0.1, 0.06, 0xffb02e, { emissive: 0xff9a1e, ei: 2, cast: false }));
+        DIG[d].forEach((row, r) => [...row].forEach((ch, c) => { if (ch === 'X') st.box(x0 + c * V, top + 0.45 + (4 - r) * V, -3.05 + dz, V, V, 0.06, 0xf2c230, { cast: false, emissive: 0x6a4a00, ei: 0.4 }); }));
+        flames.push(st.box(x0 + V, top + 0.45 + 5 * V + 0.02, -3.05 + dz, 0.06, 0.1, 0.06, 0xffb02e, { emissive: 0xff9a1e, ei: 2, cast: false }));
       });
-      const candleLight = point(st, -0.4, top + 1.1, -3.0, 0xffa64d, 2, 4);
+      const candleLight = point(st, -0.4, top + 1.1, -3.0 + dz, 0xffa64d, 2, 4);
       st.updaters.push((dt, t) => { flames.forEach((f, i) => { f.scale.y = 0.1 * (1 + Math.sin(t * 17 + i) * 0.25); }); candleLight.intensity = 1.8 + Math.sin(t * 13) * 0.4; });
-      // pedaço caído no chão, com cobertura espalhada e farelos
-      const chunk1 = st.box(0.75, 0, -2.25, 0.42, 0.34, 0.38, CH); chunk1.rotation.set(0.25, 0.6, 0.35);
-      const chunk2 = st.box(1.15, 0, -1.95, 0.3, 0.22, 0.26, CH); chunk2.rotation.set(-0.3, 0.2, 0.5);
-      st.box(0.9, 0, -2.1, 0.9, 0.02, 0.7, CR, { cast: false });
-      for (let i = 0; i < 14; i++) st.box(0.3 + ((i * 0.37) % 1) * 1.3, 0, -2.6 + ((i * 0.61) % 1) * 1.0, 0.07, 0.05, 0.07, i % 3 ? CH : PK, { cast: false });
+      // docinhos numa bandeja e copos nas pontas da mesa
+      st.box(-1.35, top, TZ, 0.7, 0.03, 0.5, 0xf4f4f4, { cast: false });
+      for (let i = 0; i < 8; i++) st.box(-1.6 + (i % 4) * 0.16, top + 0.03, TZ - 0.1 + Math.floor(i / 4) * 0.2, 0.1, 0.09, 0.1, i % 3 ? 0x3a2216 : 0xf7e7c6, { cast: false });
+      [[1.2, -0.2], [1.45, -0.05], [1.3, 0.2], [1.6, 0.25]].forEach(([x, z], i) => st.box(x, top, TZ + z, 0.11, 0.17, 0.11, i % 2 ? 0xd7262e : 0xff8fc7, { cast: false }));
+      // pedaço caído no chão, na frente da mesa, com cobertura espalhada e farelos
+      const chunk1 = st.box(0.75, 0, -1.25, 0.42, 0.34, 0.38, CH); chunk1.rotation.set(0.25, 0.6, 0.35);
+      const chunk2 = st.box(1.15, 0, -0.95, 0.3, 0.22, 0.26, CH); chunk2.rotation.set(-0.3, 0.2, 0.5);
+      st.box(0.9, 0, -1.1, 0.9, 0.02, 0.7, CR, { cast: false });
+      for (let i = 0; i < 14; i++) st.box(0.3 + ((i * 0.37) % 1) * 1.3, 0, -1.6 + ((i * 0.61) % 1) * 1.0, 0.07, 0.05, 0.07, i % 3 ? CH : PK, { cast: false });
 
       // painel "FLORA FAZ 19" num cavalete, com balões
       st.box(-3.1, 0, -3.0, 0.08, 1.0, 0.08, 0x6b4a2b);
@@ -711,21 +754,44 @@ export const MEMORIES = [
 
       // cortina prateada para fotos na parede da esquerda
       const tinsel = [];
-      const tm = [new THREE.MeshPhongMaterial({ color: 0xc9d3e6, specular: 0xffffff, shininess: 120, emissive: 0x1a2040 }), new THREE.MeshPhongMaterial({ color: 0x8aa4ff, specular: 0xffffff, shininess: 120, emissive: 0x141a50 })];
+      const tm = [0x7d8592, 0xaab2be, 0xdfe4ec, 0x949cab, 0xf2f4f8, 0xc3c9d3].map(c => new THREE.MeshPhongMaterial({ color: c, specular: 0xffffff, shininess: 200, emissive: 0xffffff, emissiveIntensity: 0.02 }));
       tm.forEach(m => st.disposables.push(m));
-      for (let layer = 0; layer < 2; layer++) for (let z = -2.6; z <= 2.6; z += 0.07) {
-        const m = new THREE.Mesh(BOX, tm[(Math.floor(z * 14) + layer) % 2 ? 1 : 0]);
+      for (let layer = 0; layer < 2; layer++) for (let z = -2.6; z <= 2.6; z += 0.06) {
+        const m = new THREE.Mesh(BOX, tm[(Math.random() * tm.length) | 0]);
         m.scale.set(0.02, 2.75, 0.045); m.position.set(-X + 0.28 + layer * 0.1, 0.05 + 1.375, z); st.add(m); tinsel.push(m);
       }
-      st.box(-X + 0.32, 2.85, 0, 0.12, 0.08, 5.4, 0x9a9a9a);
-      st.updaters.push((dt, t) => tinsel.forEach((m, i) => { m.rotation.x = Math.sin(t * 1.6 + i * 0.7) * 0.03; }));
+      st.box(-X + 0.32, 2.85, 0, 0.12, 0.08, 5.4, 0xd0d4dc);
+      // cintilância: cada grupo de franjas acende de leve em momentos diferentes
+      st.updaters.push((dt, t) => {
+        tinsel.forEach((m, i) => { m.rotation.x = Math.sin(t * 1.6 + i * 0.7) * 0.035; });
+        tm.forEach((m, i) => { m.emissiveIntensity = 0.02 + 0.55 * Math.pow(Math.max(0, Math.sin(t * 2.4 + i * 1.3)), 8); });
+      });
+      // estrelinhas de brilho que aparecem e somem pela cortina
+      const glintMat = new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false });
+      st.disposables.push(glintMat);
+      const glints = [];
+      const placeGlint = (gl) => gl.g.position.set(-X + 0.44, 0.3 + Math.random() * 2.4, -2.5 + Math.random() * 5.0);
+      for (let i = 0; i < 16; i++) {
+        const g = new THREE.Group();
+        [[0.16, 0.025], [0.025, 0.16]].forEach(([h, d]) => { const m = new THREE.Mesh(BOX, glintMat); m.scale.set(0.01, h, d); g.add(m); });
+        const gl = { g, ph: Math.random() * Math.PI * 2, sp: 1.6 + Math.random() * 1.6 };
+        placeGlint(gl); st.add(g); glints.push(gl);
+      }
+      st.updaters.push((dt) => glints.forEach(gl => {
+        gl.ph += dt * gl.sp;
+        if (gl.ph > Math.PI * 2) { gl.ph -= Math.PI * 2; placeGlint(gl); }
+        const k = Math.pow(Math.max(0, Math.sin(gl.ph)), 4);
+        gl.g.scale.setScalar(Math.max(0.001, k));
+        gl.g.rotation.x = gl.ph * 0.5;
+      }));
 
       // mesa redonda com cadeiras
-      const RT = new THREE.Vector3(2.8, 0, 2.0);
+      const RT = new THREE.Vector3(2.0, 0, 2.5);
       const rt = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.06, 18), mat(0xf1ede6)); rt.position.set(RT.x, 0.78, RT.z); rt.castShadow = true; st.add(rt);
-      st.box(RT.x, 0, RT.z, 0.12, 0.78, 0.12, 0x6b4a2b, { solid: true });
+      st.box(RT.x, 0, RT.z, 0.12, 0.78, 0.12, 0x6b4a2b);
+      st.solid(RT.x - 0.65, RT.x + 0.65, RT.z - 0.65, RT.z + 0.65);
       st.box(RT.x + 0.1, 0.81, RT.z - 0.1, 0.14, 0.2, 0.14, 0xffffff, { opacity: 0.8 });
-      const seats = [[RT.x - 1.0, RT.z, Math.PI / 2], [RT.x + 1.0, RT.z, -Math.PI / 2], [RT.x, RT.z - 1.0, 0], [RT.x, RT.z + 1.0, Math.PI]];
+      const seats = [[RT.x - 1.0, RT.z, Math.PI / 2], [RT.x + 1.0, RT.z, -Math.PI / 2], [RT.x, RT.z - 1.0, 0]];
       seats.forEach(([x, z, r]) => st.chair(x, z, r, 0x6b4a2b));
 
       // quem estava lá mas ainda não pode ser identificado (Breno, Dudão, Nala): bonecos cinza na mesa
@@ -736,16 +802,26 @@ export const MEMORIES = [
       const coro = [
         api.npc('hanna', -3.0, -0.6, { look: { shirt: 0xff8fc7, skirt: 0xff8fc7, skirtLen: 'short', sleeveless: true, wingColor: 0xff8fc7 }, extras: ['wings'], ambientR: 2.2, ambient: 'Clarice matou o bolo!' }),
         api.npc('analuz', 3.4, -1.0, { look: { shirt: 0xa3161f, skirt: 0xa3161f, skirtLen: 'short', strapless: true, sleeveless: true, socks: 0xf5f5f5, shoes: 0xc0392b, headbandColor: 0xc0182a }, extras: ['headband', 'bloodmarks'], ambientR: 2.2, ambient: 'Clarice matou o bolo!' }),
-        api.npc('nanda', -1.9, 0.4, { look: { shirt: 0xf8f6f0, pants: 0xf8f6f0, sleeveless: true, streaks: 0xe8d27a }, ambientR: 2.2, ambient: 'Clarice matou o bolo!' }),
-        api.npc('yasmim', 1.5, 0.0, { look: { shirt: 0xf8f6f0, pants: 0x1c1c1c, sleeveless: true, hairStyle: 'braids', bandanaColor: 0xd7262e }, extras: ['bandana'], ambientR: 2.2, ambient: 'CLARICE MATOU O BOLO!' }),
+        api.npc('nanda', -1.9, 0.4, { dance: true, look: { shirt: 0xf8f6f0, pants: 0xf8f6f0, sleeveless: true, streaks: 0xe8d27a, wingColor: 0xffffff }, extras: ['wings'], ambientR: 2.2, ambient: 'Clarice matou o bolo!' }),
+        api.npc('yasmim', 1.2, 0.2, { look: { bikini: 0xff7eb6, shorts: true, pants: 0x5b7fb5, hairStyle: 'braids', bowColor: 0xff5fa2 }, extras: ['bow'], ambientR: 2.2, ambient: 'CLARICE MATOU O BOLO!' }),
       ];
-      api.npc('alice', -3.7, 0.7, { rot: 0.45, facePlayer: false, look: { shirt: 0x151515, pants: 0x151515, sleeveless: true } });
+      const alice = api.npc('alice', -3.7, 0.7, { rot: 0.45, facePlayer: false, look: { shirt: 0x151515, pants: 0x151515, sleeveless: true } });
       // Chinelo: blazer preto, blusa branca, short preto, meia arrastão e argolas, como na foto em grupo
-      api.npc('chinelo', -3.8, 2.3, { rot: 0.35, facePlayer: false, look: { shirt: 0xf8f6f0, jacket: 0x161616, pants: 0x161616, shorts: true, fishnet: true, shoes: 0x161616 }, extras: ['hoops'] });
-      const clarice = api.npc('clarice', 1.6, -1.5, { ambient: 'Socorro!', ambientStyle: 'shout-sm' });
+      const chinelo = api.npc('chinelo', -3.8, 2.3, { rot: 0.35, facePlayer: false, look: { shirt: 0xf8f6f0, jacket: 0x161616, pants: 0x161616, shorts: true, fishnet: true, shoes: 0x161616 }, extras: ['hoops'] });
+      const clarice = api.npc('clarice', 1.7, -0.8, { ambient: 'Socorro!', ambientStyle: 'shout-sm' });
+
+      // ninguém fica parado: Clarice anda aflita perto do bolo, o pessoal circula, Nanda dança,
+      // Hanna flutua e Alice e Chinelo trocam de pose na cortina
+      wander(st, clarice, [[2.4, -1.0], [2.2, -0.4], [1.7, -0.8]], { speed: 1.6, pause: [0.4, 1.2] });
+      wander(st, coro[1], [[4.2, -0.4], [3.9, 0.4], [3.4, -1.0]]);
+      wander(st, coro[3], [[0.6, 0.7], [1.3, 0.9], [1.2, 0.2]]);
+      wander(st, coro[0], [[-2.4, -1.2], [-3.0, -0.6]], { speed: 0.8 });
+      st.updaters.push((dt, t) => { coro[0].root.position.y = 0.1 + Math.sin(t * 2.2) * 0.08; });
+      poser(st, alice, [{ rot: 0.45, rx: -2.8, rz: 0.2 }, { rot: 1.0, lz: -0.7, rz: 0.7 }, { rot: 0.1, rx: -1.4, lx: -1.4 }]);
+      poser(st, chinelo, [{ rot: 0.35, lz: -0.6 }, { rot: 0.9, rx: -2.8, rz: 0.15 }, { rot: -0.1, rz: 0.6, lz: -0.6 }], 3.1);
 
       api.interact({
-        x: 0.6, z: -2.2, r: 1.6, label: 'Ver o bolo',
+        x: 0.6, z: -1.2, r: 1.6, label: 'Ver o bolo',
         onInteract: async () => {
           await api.say([
             { who: coro[0], text: 'Clarice matou o bolo!', sim: [{ who: coro[1], text: 'Clarice matou o bolo!' }, { who: coro[3], text: 'CLARICE MATOU O BOLO!' }] },
@@ -755,12 +831,13 @@ export const MEMORIES = [
       });
 
       // Flora, a aniversariante, de jaqueta de couro
-      api.npc('flora', -1.5, -1.8, {
-        rot: 2.3, label: 'Falar com a aniversariante',
+      const flora = api.npc('flora', -1.1, -3.2, {
+        rot: 0, r: 2.6, label: 'Falar com a aniversariante',
         look: { shirt: 0x2a2a2a, pants: 0x3d5a8a, jacket: 0x161616 },
         lines: [{ text: 'Meu bolo...' }],
         onInteract: async () => { await api.eliminate('flora'); await api.complete('Não sou Flora. Mas lembro desse bolo.'); },
       });
+      wander(st, flora, [[-1.5, -3.2], [-1.0, -3.2]], { speed: 0.5, pause: [2, 4] });
       api.exit(X - 0.45, 2.9, { rotY: -Math.PI / 2, w: 1.4 });
 
       return {

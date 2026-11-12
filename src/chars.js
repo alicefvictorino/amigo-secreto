@@ -33,7 +33,7 @@ export const LOOKS = {
   mayara:  { skin: 0xd9a77c, hair: 0x3a2214, hairStyle: 'long', shirt: 0xfafafa, pants: 0x1f3a5f },
   joao:    { skin: 0xe2b48c, hair: 0x2b1a10, hairStyle: 'short', shirt: 0x95a5a6, pants: 0x2c3e50 },
   silvana: { skin: 0xd8a47f, hair: 0x5a3010, hairStyle: 'short', shirt: 0xff7aa2, pants: 0x4a4a4a },
-  clarice: { skin: 0xeec4a0, hair: 0xb5651d, hairStyle: 'long', shirt: 0x5fb8a6, pants: 0x3d5a8a, shoes: 0xf2f2f2 },
+  clarice: { skin: 0xeec4a0, hair: 0x1a120e, hairStyle: 'long', shirt: 0x5fb8a6, pants: 0x3d5a8a, shoes: 0xf2f2f2 },
   comissaria: { skin: 0xd9a77c, hair: 0x2b1a10, hairStyle: 'bun', shirt: 0x1f3a6e, pants: 0x1f3a6e },
   // figurantes sem nome (multidão do carnaval)
   extra:   { skin: 0xc98f66, hair: 0x2a1a10, hairStyle: 'short', shirt: 0xffde00, pants: 0x2c3e50 },
@@ -198,6 +198,13 @@ function addExtra(name, ch) {
       [[-0.17, -0.06, 0.18, 0.35], [-0.23, -0.1, 0.14, 0.35], [-0.11, -0.12, 0.1, 0.35]].forEach(([x, y, h, rz]) => {
         const m = part(0.035, h, 0.02, 0x9e1018, x, y, 0.307, ch.parts.face); m.rotation.z = rz; m.castShadow = false;
       });
+      break;
+    }
+    case 'bow': {
+      // laço no alto da cabeça
+      const bc = ch.look.bowColor ?? 0xff5fa2;
+      part(0.12, 0.12, 0.12, bc, 0, 0.44, 0.08, head);
+      [-1, 1].forEach(sd => { const l = part(0.22, 0.17, 0.1, bc, sd * 0.16, 0.45, 0.08, head); l.rotation.z = sd * 0.35; });
       break;
     }
     case 'chain':
