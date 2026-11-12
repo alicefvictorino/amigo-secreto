@@ -33,7 +33,7 @@ export const LOOKS = {
   mayara:  { skin: 0xd9a77c, hair: 0x3a2214, hairStyle: 'long', shirt: 0xfafafa, pants: 0x1f3a5f },
   joao:    { skin: 0xe2b48c, hair: 0x2b1a10, hairStyle: 'short', shirt: 0x95a5a6, pants: 0x2c3e50 },
   silvana: { skin: 0xd8a47f, hair: 0x5a3010, hairStyle: 'short', shirt: 0xff7aa2, pants: 0x4a4a4a },
-  clarice: { skin: 0xeec4a0, hair: 0xb5651d, hairStyle: 'long', shirt: 0x2c3e50, pants: 0x2c3e50 },
+  clarice: { skin: 0xeec4a0, hair: 0xb5651d, hairStyle: 'long', shirt: 0x5fb8a6, pants: 0x3d5a8a, shoes: 0xf2f2f2 },
   comissaria: { skin: 0xd9a77c, hair: 0x2b1a10, hairStyle: 'bun', shirt: 0x1f3a6e, pants: 0x1f3a6e },
   // figurantes sem nome (multidão do carnaval)
   extra:   { skin: 0xc98f66, hair: 0x2a1a10, hairStyle: 'short', shirt: 0xffde00, pants: 0x2c3e50 },
@@ -44,6 +44,22 @@ export const NAMES = {
   alice: 'Alice', chinelo: 'Chinelo', lisis: 'Lísis', yasmim: 'Yasmim', titia: 'Titia', mayara: 'Mayara',
   joao: 'João Neto', silvana: 'Silvana', clarice: 'Clarice', [SECRET_KEY]: SECRET_NAME, boneco: '???', comissaria: 'Comissária', extra: '',
 };
+
+let FISHNET = null;
+function fishnetMat() {
+  if (FISHNET) return FISHNET;
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const g = c.getContext('2d');
+  g.strokeStyle = '#141414'; g.lineWidth = 3;
+  for (let i = -64; i <= 128; i += 16) {
+    g.beginPath(); g.moveTo(i, 0); g.lineTo(i + 64, 64); g.stroke();
+    g.beginPath(); g.moveTo(i, 64); g.lineTo(i + 64, 0); g.stroke();
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  FISHNET = new THREE.MeshLambertMaterial({ map: tex, transparent: true, alphaTest: 0.3 });
+  return FISHNET;
+}
 
 function part(w, h, d, color, x, y, z, parent, opts = {}) {
   const m = new THREE.Mesh(BOX, mat(color, opts));
@@ -164,6 +180,26 @@ function addExtra(name, ch) {
       part(0.16, 0.2, 0.1, bc, 0, 0.2, -0.36, head);
       break;
     }
+    case 'hoops':
+      [-1, 1].forEach(sd => {
+        const r = new THREE.Mesh(new THREE.TorusGeometry(0.075, 0.016, 6, 14), mat(0xf2c230));
+        r.position.set(sd * 0.425, -0.3, 0.14); r.rotation.y = Math.PI / 2; head.add(r);
+      });
+      break;
+    case 'headband': {
+      const hc = ch.look.headbandColor ?? 0xd7262e;
+      part(0.7, 0.09, 0.14, hc, 0, 0.36, 0.08, head);
+      part(0.05, 0.22, 0.12, hc, -0.345, 0.23, 0.08, head);
+      part(0.05, 0.22, 0.12, hc, 0.345, 0.23, 0.08, head);
+      break;
+    }
+    case 'bloodmarks': {
+      // maquiagem de sangue falso na bochecha
+      [[-0.17, -0.06, 0.18, 0.35], [-0.23, -0.1, 0.14, 0.35], [-0.11, -0.12, 0.1, 0.35]].forEach(([x, y, h, rz]) => {
+        const m = part(0.035, h, 0.02, 0x9e1018, x, y, 0.307, ch.parts.face); m.rotation.z = rz; m.castShadow = false;
+      });
+      break;
+    }
     case 'chain':
       part(0.3, 0.05, 0.03, 0xf2c230, 0, 0.26, 0.2, torso);
       part(0.05, 0.12, 0.03, 0xf2c230, 0, 0.18, 0.2, torso);
@@ -246,7 +282,8 @@ export function makeCharacter(lookKey, overrides = {}) {
   // perna em duas partes: com saia, a coxa tem a cor da saia (aparece quando senta) e a canela fica de pele
   const hasSkirt = look.skirt !== undefined;
   const thighCol = hasSkirt ? look.skirt : look.pants;
-  const shinCol = hasSkirt ? (look.skirtLen === 'midi' || look.skirtLen === 'short' ? look.skin : look.skirt) : (look.shorts ? look.skin : look.pants);
+  const shinBase = hasSkirt ? (look.skirtLen === 'midi' || look.skirtLen === 'short' ? look.skin : look.skirt) : (look.shorts ? look.skin : look.pants);
+  const shinCol = look.socks ?? shinBase;
   const mkLeg = (x) => {
     const p = new THREE.Group(); p.position.set(x, 0.8, 0); body.add(p);
     part(0.28, 0.36, 0.3, thighCol, 0, -0.18, 0, p);
@@ -255,6 +292,10 @@ export function makeCharacter(lookKey, overrides = {}) {
       [[-0.06, -0.08, 0.5], [0.07, -0.22, -0.5], [-0.02, -0.3, 0.3]].forEach(([dx, dy, rz]) => { const m = part(0.05, 0.16, 0.02, look.shortsPattern, dx, dy, 0.155, p); m.rotation.z = rz; });
     }
     part(0.28, 0.3, 0.3, shinCol, 0, -0.51, 0, p);
+    if (look.fishnet) {
+      const f = new THREE.Mesh(BOX, fishnetMat());
+      f.scale.set(0.29, 0.31, 0.31); f.position.set(0, -0.51, 0); p.add(f);
+    }
     part(0.3, 0.14, 0.36, look.shoes ?? 0x333333, 0, -0.73, 0.03, p);
     return p;
   };

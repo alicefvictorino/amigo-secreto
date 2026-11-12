@@ -659,9 +659,11 @@ export const MEMORIES = [
       st.room({ minX: -X, maxX: X, minZ: ZN, maxZ: ZS, h: 3.2, color: 0x8b4f2a });
       for (let x = -X + 0.6; x < X; x += 0.6) st.box(x, 0, ZN + 0.21, 0.04, 3.2, 0.02, 0x6e3c1e, { cast: false });
       for (let z = ZN + 0.6; z < ZS - 0.4; z += 0.6) st.box(X - 0.21, 0, z, 0.02, 3.2, 0.04, 0x6e3c1e, { cast: false });
+      // a parede da cortina prateada é lisa e clara
+      st.box(-X + 0.205, 0, (ZN + ZS) / 2, 0.02, 3.2, ZS - ZN - 0.4, 0xe8dcc8, { cast: false });
       lights(st, { hemi: 1.0, sun: 0.6, shadow: 9 });
       point(st, 0, 3.0, 0, 0xffe6c0, 5, 10);
-      const blue = point(st, -3.9, 2.2, 0, 0x5a6bff, 9, 7);
+      const blue = point(st, -3.9, 2.2, 0, 0x7a5cff, 9, 7);
       st.updaters.push((dt, t) => { blue.intensity = 8 + Math.sin(t * 2) * 2; });
 
       // mesa com o bolo, espelho na parede e ar-condicionado em cima
@@ -733,13 +735,14 @@ export const MEMORIES = [
       // fantasias (as de personagens de anime e série não são desenhadas; cada pessoa aparece com a roupa por baixo)
       const coro = [
         api.npc('hanna', -3.0, -0.6, { look: { shirt: 0xff8fc7, skirt: 0xff8fc7, skirtLen: 'short', sleeveless: true, wingColor: 0xff8fc7 }, extras: ['wings'], ambientR: 2.2, ambient: 'Clarice matou o bolo!' }),
-        api.npc('analuz', 3.4, -1.0, { extras: ['partyhat'], ambientR: 2.2, ambient: 'Clarice matou o bolo!' }),
+        api.npc('analuz', 3.4, -1.0, { look: { shirt: 0xa3161f, skirt: 0xa3161f, skirtLen: 'short', strapless: true, sleeveless: true, socks: 0xf5f5f5, shoes: 0xc0392b, headbandColor: 0xc0182a }, extras: ['headband', 'bloodmarks'], ambientR: 2.2, ambient: 'Clarice matou o bolo!' }),
         api.npc('nanda', -1.9, 0.4, { look: { shirt: 0xf8f6f0, pants: 0xf8f6f0, sleeveless: true, streaks: 0xe8d27a }, ambientR: 2.2, ambient: 'Clarice matou o bolo!' }),
         api.npc('yasmim', 1.5, 0.0, { look: { shirt: 0xf8f6f0, pants: 0x1c1c1c, sleeveless: true, hairStyle: 'braids', bandanaColor: 0xd7262e }, extras: ['bandana'], ambientR: 2.2, ambient: 'CLARICE MATOU O BOLO!' }),
       ];
-      api.npc('alice', -3.9, 1.6, { rot: Math.PI / 2, look: { shirt: 0x151515, pants: 0x151515, sleeveless: true } });
-      api.npc('chinelo', -3.9, 2.6, { rot: Math.PI / 2, extras: ['chain'] });
-      const clarice = api.npc('clarice', 1.6, -1.5, { extras: ['partyhat'], ambient: 'Socorro!', ambientStyle: 'shout-sm' });
+      api.npc('alice', -3.7, 0.7, { rot: 0.45, facePlayer: false, look: { shirt: 0x151515, pants: 0x151515, sleeveless: true } });
+      // Chinelo: blazer preto, blusa branca, short preto, meia arrastão e argolas, como na foto em grupo
+      api.npc('chinelo', -3.8, 2.3, { rot: 0.35, facePlayer: false, look: { shirt: 0xf8f6f0, jacket: 0x161616, pants: 0x161616, shorts: true, fishnet: true, shoes: 0x161616 }, extras: ['hoops'] });
+      const clarice = api.npc('clarice', 1.6, -1.5, { ambient: 'Socorro!', ambientStyle: 'shout-sm' });
 
       api.interact({
         x: 0.6, z: -2.2, r: 1.6, label: 'Ver o bolo',
