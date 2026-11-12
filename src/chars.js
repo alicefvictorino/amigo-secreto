@@ -178,6 +178,8 @@ function addExtra(name, ch) {
       part(0.66, 0.16, 0.66, bc, 0, 0.36, 0, head);
       part(0.62, 0.1, 0.62, bc, 0, 0.27, -0.01, head);
       part(0.16, 0.2, 0.1, bc, 0, 0.2, -0.36, head);
+      // pontas do lenço caindo atrás
+      [-1, 1].forEach(sd => { const t = part(0.09, 0.28, 0.04, bc, sd * 0.07, 0.02, -0.4, head); t.rotation.z = sd * 0.25; });
       break;
     }
     case 'hoops':
