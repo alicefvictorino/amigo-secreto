@@ -207,6 +207,16 @@ function addExtra(name, ch) {
       [-1, 1].forEach(sd => { const l = part(0.22, 0.17, 0.1, bc, sd * 0.16, 0.45, 0.08, head); l.rotation.z = sd * 0.35; });
       break;
     }
+    case 'bat': {
+      // taco de beisebol de madeira, liso, segurado de pé na frente do corpo
+      ch.holdArms = true;
+      armR.rotation.x = -0.9;
+      const b = new THREE.Group(); b.position.set(0, -0.68, 0.04); b.rotation.set(0.9, 0, -0.35); armR.add(b);
+      part(0.08, 0.04, 0.08, 0x5a3a1a, 0, -0.07, 0, b);
+      part(0.06, 0.3, 0.06, 0x8a5a2b, 0, 0.1, 0, b);
+      part(0.1, 0.55, 0.1, 0xc8955a, 0, 0.5, 0, b);
+      break;
+    }
     case 'chain':
       part(0.3, 0.05, 0.03, 0xf2c230, 0, 0.26, 0.2, torso);
       part(0.05, 0.12, 0.03, 0xf2c230, 0, 0.18, 0.2, torso);
@@ -378,6 +388,20 @@ export function makeCharacter(lookKey, overrides = {}) {
     part(0.24, 0.76, 0.42, look.jacket, 0.22, 0, 0, torso);
     part(0.7, 0.76, 0.1, look.jacket, 0, 0, -0.17, torso);
     [parts.armL, parts.armR].forEach(a => { part(0.23, 0.52, 0.27, look.jacket, 0, -0.2, 0, a); part(0.21, 0.24, 0.25, look.jacket, 0, -0.5, 0, a); });
+  }
+
+  if (look.kimono !== undefined) {
+    // kimono liso e aberto na frente, até o joelho, com mangas largas
+    const k = look.kimono;
+    part(0.24, 0.78, 0.42, k, -0.22, 0, 0, torso);
+    part(0.24, 0.78, 0.42, k, 0.22, 0, 0, torso);
+    part(0.7, 0.78, 0.1, k, 0, 0, -0.17, torso);
+    part(0.2, 0.5, 0.06, k, -0.24, 0.55, 0.21, body);
+    part(0.2, 0.5, 0.06, k, 0.24, 0.55, 0.21, body);
+    part(0.72, 0.5, 0.06, k, 0, 0.55, -0.21, body);
+    part(0.06, 0.5, 0.42, k, -0.36, 0.55, 0, body);
+    part(0.06, 0.5, 0.42, k, 0.36, 0.55, 0, body);
+    [parts.armL, parts.armR].forEach(a => part(0.3, 0.6, 0.34, k, 0, -0.27, 0, a));
   }
 
   const ch = { root, body, parts, look, lookKey, anim: { t: Math.random() * 10, walk: 0, mode: 'idle' } };

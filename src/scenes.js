@@ -805,7 +805,7 @@ export const MEMORIES = [
         api.npc('nanda', -1.9, 0.4, { dance: true, look: { shirt: 0xf8f6f0, pants: 0xf8f6f0, sleeveless: true, streaks: 0xe8d27a, wingColor: 0xffffff }, extras: ['wings'], ambientR: 2.2, ambient: 'Clarice matou o bolo!' }),
         api.npc('yasmim', 1.2, 0.2, { look: { bikini: 0xff7eb6, shorts: true, pants: 0x5b7fb5, hairStyle: 'braids', bowColor: 0xff5fa2 }, extras: ['bow'], ambientR: 2.2, ambient: 'CLARICE MATOU O BOLO!' }),
       ];
-      const alice = api.npc('alice', -3.7, 0.7, { rot: 0.45, facePlayer: false, look: { shirt: 0x151515, pants: 0x151515, sleeveless: true } });
+      const alice = api.npc('alice', -3.7, 0.7, { rot: 0.45, facePlayer: false, look: { shirt: 0x151515, pants: 0x151515, sleeveless: true, kimono: 0xf4c542 } });
       // Chinelo: blazer preto, blusa branca, short preto, meia arrastão e argolas, como na foto em grupo
       const chinelo = api.npc('chinelo', -3.8, 2.3, { rot: 0.35, facePlayer: false, look: { shirt: 0xf8f6f0, jacket: 0x161616, pants: 0x161616, shorts: true, fishnet: true, shoes: 0x161616 }, extras: ['hoops'] });
       const clarice = api.npc('clarice', 1.7, -0.8, { ambient: 'Socorro!', ambientStyle: 'shout-sm' });
@@ -833,7 +833,7 @@ export const MEMORIES = [
       // Flora, a aniversariante, de jaqueta de couro
       const flora = api.npc('flora', -1.1, -3.2, {
         rot: 0, r: 2.6, label: 'Falar com a aniversariante',
-        look: { shirt: 0x2a2a2a, pants: 0x3d5a8a, jacket: 0x161616 },
+        look: { shirt: 0x2a2a2a, pants: 0x3d5a8a, jacket: 0x161616 }, extras: ['bat'],
         lines: [{ text: 'Meu bolo...' }],
         onInteract: async () => { await api.eliminate('flora'); await api.complete('Não sou Flora. Mas lembro desse bolo.'); },
       });
