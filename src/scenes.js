@@ -947,11 +947,13 @@ export const MEMORIES = [
         const n = api.npc('extra', x, z, { dance: true, facePlayer: false, look: { shirt: shirts[i % 6], skin: skins[i % 6], hairStyle: ['short', 'curly', 'long', 'bun'][i % 4] }, extras: ['mask'] });
         n.ch.anim.t = i * 0.37;
       });
-      // quem já saiu da lista + coringa
+      // quem já saiu da lista (Chinelo, Flora, Yasmim, Nanda e Lísis não foram)
       api.npc('hanna', -4, 1.2, { dance: true, extras: ['abada'] });
       api.npc('analuz', -2.6, 2.6, { dance: true, extras: ['abada'] });
-      api.npc('flora', -5.6, 3.0, { dance: true, extras: ['abada'] });
-      api.npc('chinelo', -3.2, -0.6, { dance: true, extras: ['abada'] });
+      // estavam lá mas ainda não dá para saber quem são (Nala e Breno)
+      const grey = { name: '', label: 'Quem é?', once: false, lines: [{ who: 'thought', text: 'Ainda não sei quem é.' }] };
+      api.npc('boneco', -5.4, 2.8, { ...grey, dance: true, extras: ['abada'] });
+      api.npc('boneco', -3.4, -0.6, { ...grey, dance: true, extras: ['abada'] });
 
       api.npc('dudao', 4.0, -1.0, {
         extras: ['abada'], label: 'Falar com Dudão', ambient: 'Ei...',

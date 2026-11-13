@@ -452,7 +452,7 @@ const api = {
     if (opts.dance) ch.anim.mode = 'dance';
     st.add(ch.root);
     const n = {
-      ch, root: ch.root, key: lookKey, name: opts.name !== undefined ? opts.name : (NAMES[lookKey] || lookKey), lookKey,
+      ch, root: ch.root, key: lookKey, name: opts.name !== undefined ? opts.name : (lookKey in NAMES ? NAMES[lookKey] : lookKey), lookKey,
       ambient: opts.ambient || null, ambientR: opts.ambientR, ambientStyle: opts.ambientStyle,
       baseRot: opts.rot || 0, facePlayer: opts.facePlayer, moving: false,
     };
