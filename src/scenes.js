@@ -1357,12 +1357,12 @@ export const MEMORIES = [
       wallX(10.1, -1.6, 11.6, 0.5);
       const inner = new THREE.Mesh(new THREE.PlaneGeometry(13.2, 2.7), new THREE.MeshLambertMaterial({ color: WALL }));
       inner.position.set(5.0, 1.85, 9.94); inner.rotation.y = Math.PI; st.add(inner); st.disposables.push(inner.geometry, inner.material);
-      // quadro branco (planos virados para dentro da sala, para não aparecerem por trás) e a faixa do sarau
-      const northPlane = (cx, cy, w, h, color, z) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshLambertMaterial({ color })); m.position.set(cx, cy, z); m.rotation.y = Math.PI; st.add(m); st.disposables.push(m.geometry, m.material); return m; };
-      northPlane(2.0, 2.15, 5.8, 1.75, 0x9aa3ab, 9.9);
-      northPlane(2.0, 2.15, 5.55, 1.55, 0xfbfbfb, 9.88);
+      // quadro branco (planos virados para dentro da sala, para não aparecerem por trás) e a faixa de inscrições do sarau
+      const northPlane = (cx, cy, w, h, color, z, basic = false) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), basic ? new THREE.MeshBasicMaterial({ color, toneMapped: false }) : new THREE.MeshLambertMaterial({ color })); m.position.set(cx, cy, z); m.rotation.y = Math.PI; st.add(m); st.disposables.push(m.geometry, m.material); return m; };
+      northPlane(2.0, 2.15, 5.8, 1.75, 0x8a929a, 9.9);
+      northPlane(2.0, 2.15, 5.55, 1.55, 0xf4f6f7, 9.88, true);
       [[0.4, 1.75, 1.6], [2.6, 1.85, 1.2], [3.6, 1.6, 0.9]].forEach(([x, y, w]) => northPlane(x, y, w, 0.05, 0x1f4fa0, 9.87));
-      st.sign('APRESENTAÇÕES DO SARAU', 2.0, 2.6, 9.85, 6.3, 0.8, { bg: '#c8202f', fg: '#ffffff', border: '#f2c230', rotY: Math.PI, weight: 700 });
+      st.sign('INSCRIÇÕES ABERTAS PARA O SARAU', 2.0, 2.6, 9.85, 6.3, 0.8, { bg: '#c8202f', fg: '#ffffff', border: '#f2c230', rotY: Math.PI, weight: 700 });
       const abc = (() => {
         const c = document.createElement('canvas'); c.width = 1024; c.height = 160;
         const g = c.getContext('2d'); g.fillStyle = '#eae3d2'; g.fillRect(0, 0, 1024, 160);
@@ -1398,22 +1398,7 @@ export const MEMORIES = [
         seats.push([x, z - 0.22]);
       }
       const at = (r, c) => seats[r * 6 + c];
-      const classmates = [['hanna', 5, 1], ['flora', 4, 0], ['nala', 3, 2], ['lisis', 3, 5], ['alice', 2, 3]];
-      // sarau: na frente do quadro, de farda, cada um levantando a sua plaquinha (texto dos dois lados)
-      const placa = (ch, text) => {
-        const tex = textTexture(text, { w: 512, h: 220, bg: '#ffffff', fg: '#1a1a1a', border: '#1c2a4a', weight: 700 });
-        const m = new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }); st.disposables.push(tex, m);
-        const g = new THREE.Group(); g.position.set(0, 2.5, 0.05); ch.root.add(g);
-        const board = new THREE.Mesh(BOX, mat(0xffffff)); board.scale.set(1.0, 0.44, 0.03); g.add(board);
-        [0, Math.PI].forEach(r => { const pl = new THREE.Mesh(new THREE.PlaneGeometry(0.96, 0.42), m); pl.rotation.y = r; pl.position.z = r ? -0.017 : 0.017; g.add(pl); });
-        ch.holdArms = true; ch.parts.armL.rotation.set(-2.95, 0, 0.12); ch.parts.armR.rotation.set(-2.95, 0, -0.12);
-        return g;
-      };
-      const SPOT = { x: 0.2, z: 7.45 };
-      [['chinelo', 1.6, 'INDÍGENA'], ['analuz', 3.0, 'LGBT'], ['dudao', 4.4, 'PCD']].forEach(([k, x, txt]) => {
-        const n = api.npc(k, x, SPOT.z, { rot: Math.PI, facePlayer: false, look: FARDA });
-        placa(n.ch, txt);
-      });
+      const classmates = [['hanna', 5, 1], ['analuz', 5, 3], ['flora', 4, 0], ['dudao', 4, 4], ['nala', 3, 2], ['lisis', 3, 5], ['chinelo', 2, 1], ['alice', 2, 3]];
       classmates.forEach(([k, r, c]) => { const [x, z] = at(r, c); api.npc(k, x, z, { sit: true, y: 0.02, rot: 0, facePlayer: false, look: FARDA, solid: false }); });
       const skins = [0x8d5524, 0xc68642, 0xe0ac69, 0xf1c27d, 0x6b3e26, 0xd9a77c];
       [[6, 0], [6, 4], [5, 5], [4, 2], [3, 0], [1, 2], [1, 4], [0, 1]].forEach(([r, c], i) => {
@@ -1428,11 +1413,7 @@ export const MEMORIES = [
           salaDone = true; st.flags.sala = true;
           api.state.cutscene++;
           (async () => {
-            // o boneco vai para o lugar dele na fila do sarau, com a plaquinha dele
-            const pl = api.player;
-            pl.root.position.set(SPOT.x, 0, SPOT.z); pl.root.rotation.y = Math.PI;
-            placa(pl, 'NEGRO');
-            // a câmera mostra, do lado da turma, a fila de frente e a faixa no quadro
+            // a câmera mostra, do lado da turma, o quadro com a faixa do sarau
             await api.camTo(new THREE.Vector3(2.3, 3.9, 0.2), new THREE.Vector3(2.3, 1.9, 9.0), 1300);
             await api.wait(700);
             await api.thought('Minha sala.');
