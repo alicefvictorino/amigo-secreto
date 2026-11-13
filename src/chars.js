@@ -332,6 +332,11 @@ export function makeCharacter(lookKey, overrides = {}) {
   }
   parts.torso = torso;
   if (look.yoke !== undefined) part(0.68, 0.18, 0.4, look.yoke, 0, 0.29, 0, torso); // ombros de outra cor (farda)
+  if (look.collar !== undefined) {
+    // gola polo e carcela de outra cor (farda)
+    part(0.46, 0.08, 0.42, look.collar, 0, 0.36, 0, torso);
+    part(0.08, 0.26, 0.02, look.collar, 0, 0.2, 0.2, torso);
+  }
 
   const mkArm = (x) => {
     const p = new THREE.Group(); p.position.set(x, 1.5, 0); body.add(p);

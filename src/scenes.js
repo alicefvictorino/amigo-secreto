@@ -23,7 +23,7 @@ export const CANDIDATES = [
   { key: 'nanda', name: 'Nanda', art: 'a' },
 ];
 
-const FARDA = { shirt: 0xf7f7f7, sleeves: 0x1c2a4a, yoke: 0x1c2a4a, pants: 0x1c2a4a }; // farda: branca com ombros e mangas azul-marinho
+const FARDA = { shirt: 0xf7f7f7, sleeves: 0xc8202f, collar: 0xc8202f, pants: 0x1c2a4a }; // farda: polo branca com mangas e gola vermelhas, calça azul-marinho
 
 // ---------------------------------------------------------------------
 // utilidades
@@ -1268,7 +1268,7 @@ export const MEMORIES = [
     build(st, api) {
       st.engine = api;
       // pela planta: banheiro e coordenação em cima, corredor no meio e a sala de aula embaixo
-      const WALL = 0xf4f4f2, TRIM = 0x1c2a4a, H = 3.2, TILE_H = 1.6;
+      const WALL = 0xf4f4f2, TRIM = 0x1c2a4a, H = 3.2, TILE_H = 2.1;
       // paredes como nas fotos: azulejo branco na parte de baixo e branco liso em cima
       const tileTex = (() => {
         const c = document.createElement('canvas'); c.width = c.height = 128;
@@ -1391,6 +1391,10 @@ export const MEMORIES = [
       const fadeList = [];
       fadeList.push(...wallX(-0.8, -1.6, 11.6));
       [1.0, 5.0, 9.0].forEach(x => fadeList.push(...hiWin(x, -0.8, true, 1.6, 2.2, 0.8)));
+      [3.0, 7.0].forEach(x => {
+        fadeList.push(st.box(x, 2.45, -0.45, 1.5, 0.48, 0.4, 0xe8dfc8, { cast: false }));
+        fadeList.push(st.box(x, 2.5, -0.24, 1.3, 0.12, 0.02, 0x8a8478, { cast: false }));
+      });
       
       const posterCols = [0xf2c230, 0x3fa7d6, 0xe8743b, 0x7fc8a9, 0xd98fa6, 0xb9a3d6];
       for (let i = 0; i < 6; i++) {
@@ -1444,8 +1448,9 @@ export const MEMORIES = [
       const seats = [];
       for (let r = 0; r < 7; r++) for (let c = 0; c < 6; c++) {
         const x = 0.2 + c * 1.85, z = 0.35 + r * 0.95;
-        st.box(x, 0.68, z + 0.32, 0.9, 0.07, 0.5, 0x2f6fae, { solid: true });
-        st.box(x, 0, z + 0.32, 0.07, 0.68, 0.07, 0x666666, { cast: false });
+        st.box(x, 0.68, z + 0.32, 0.9, 0.06, 0.5, 0xf2f2f0, { solid: true });
+        st.box(x - 0.38, 0, z + 0.32, 0.05, 0.68, 0.05, 0x9aa0a6, { cast: false });
+        st.box(x + 0.38, 0, z + 0.32, 0.05, 0.68, 0.05, 0x9aa0a6, { cast: false });
         st.box(x, 0.4, z - 0.22, 0.48, 0.07, 0.45, 0x2f6fae, { cast: false });
         st.box(x, 0.47, z - 0.46, 0.48, 0.5, 0.06, 0x2f6fae, { cast: false });
         st.box(x, 0, z - 0.22, 0.06, 0.4, 0.06, 0x666666, { cast: false });
@@ -1457,7 +1462,8 @@ export const MEMORIES = [
       const skins = [0x8d5524, 0xc68642, 0xe0ac69, 0xf1c27d, 0x6b3e26, 0xd9a77c];
       [[6, 0], [6, 4], [5, 5], [4, 2], [3, 0], [1, 2], [1, 4], [0, 1]].forEach(([r, c], i) => {
         const [x, z] = at(r, c);
-        api.npc('extra', x, z, { sit: true, y: 0.02, rot: 0, facePlayer: false, solid: false, look: { ...FARDA, skin: skins[i % 6], hair: [0x1a120c, 0x3a2216, 0x6b4226][i % 3], hairStyle: ['short', 'long', 'curly', 'bun'][i % 4] } });
+        const coat = i === 1 || i === 5 ? { jacket: 0x1c1c1e } : i === 3 ? { jacket: 0xe9e9e6 } : {};
+        api.npc('extra', x, z, { sit: true, y: 0.02, rot: 0, facePlayer: false, solid: false, look: { ...FARDA, ...coat, skin: skins[i % 6], hair: [0x1a120c, 0x3a2216, 0x6b4226][i % 3], hairStyle: ['short', 'long', 'curly', 'bun'][i % 4] } });
       });
       let salaDone = false;
       st.updaters.push(() => {
