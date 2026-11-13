@@ -91,6 +91,18 @@
   .placeholder .grid { display: grid; grid-template-columns: repeat(6, 7vw); gap: .8vw; margin-bottom: 1em; }
   .placeholder .grid i { height: 7vw; background: linear-gradient(135deg, #f2c230, #d7372f); border-radius: 8px; opacity: .55; }
   .placeholder.msg { font-style: italic; }
+  /* mensagem de Alice */
+  #screen.lovecard { background: radial-gradient(circle at 50% 45%, #fff7e6 0%, #ffd9cf 55%, #f2a99c 100%); }
+  .love { position: relative; z-index: 5; line-height: .95; animation: lovepulse 1.6s ease-in-out infinite; }
+  .love .l1 { font-size: clamp(44px, 9vw, 190px); font-weight: 700; color: var(--vermelho); -webkit-text-stroke: 3px var(--escuro); text-shadow: 0 8px 0 var(--escuro); opacity: 0; animation: lovein .9s cubic-bezier(.2,.9,.25,1.2) .2s forwards; }
+  .love .l2 { font-size: clamp(56px, 12vw, 250px); font-weight: 700; color: var(--creme); -webkit-text-stroke: 4px var(--escuro); text-shadow: 0 10px 0 var(--vermelho); opacity: 0; animation: lovein .9s cubic-bezier(.2,.9,.25,1.2) .9s forwards; }
+  @keyframes lovein { from { opacity: 0; transform: scale(.4) rotate(-6deg); } to { opacity: 1; transform: none; } }
+  @keyframes lovepulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+  .hearts { position: absolute; inset: 0; overflow: hidden; z-index: 0; pointer-events: none; }
+  .heart { position: absolute; bottom: -12vh; font-size: calc(clamp(22px, 3vw, 60px) * var(--s)); color: var(--vermelho); opacity: 0; animation: heartup var(--t) linear infinite; animation-delay: var(--d); }
+  .heart:nth-child(3n) { color: #ff7eb6; }
+  .heart:nth-child(4n) { color: var(--ouro); }
+  @keyframes heartup { 0% { opacity: 0; transform: translateY(0) rotate(-10deg); } 10% { opacity: .85; } 90% { opacity: .6; } 100% { opacity: 0; transform: translateY(-120vh) rotate(14deg); } }
   /* mosaico de fotos do final */
   #screen.mosaic { background: #1b100c; }
   #screen.mosaic .cont { color: #c9b29a; z-index: 3; }

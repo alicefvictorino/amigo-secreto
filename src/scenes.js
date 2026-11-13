@@ -1627,7 +1627,9 @@ export const MEMORIES = [
           await api.finishMemory();
           await api.screen(`<div class="reveal"><div class="small">Eu sou</div><div class="big">${SECRET_NAME.toUpperCase()}</div></div><div class="confetti"></div>`, { cls: 'party' });
           await api.screen(`<div class="placeholder"><div class="ph-icon">▶</div><div>Aqui entra o vídeo de ${SECRET_NAME}</div><small>(enviar o arquivo para incluir)</small></div>`);
-          await api.screen(`<div class="placeholder msg"><div>Aqui entra a sua mensagem para ${SECRET_NAME}.</div><small>(texto a escrever)</small></div>`);
+          // mensagem de Alice, com corações subindo
+          const hearts = Array.from({ length: 26 }, (_, i) => `<span class="heart" style="left:${(i * 37) % 100}%;--d:${((i * 0.53) % 6).toFixed(2)}s;--t:${(6 + (i % 5) * 1.1).toFixed(1)}s;--s:${(0.7 + (i % 4) * 0.35).toFixed(2)}">♥</span>`).join('');
+          await api.screen(`<div class="hearts">${hearts}</div><div class="love"><div class="l1">TE AMO</div><div class="l2">${SECRET_NAME.toUpperCase()}</div></div>`, { cls: 'party lovecard' });
           if (temMosaico()) {
             const shown = api.screen(mosaicoHTML('Eu sou feito de vocês.'), { cls: 'mosaic' });
             montarMosaico();
