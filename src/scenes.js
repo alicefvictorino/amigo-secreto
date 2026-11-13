@@ -4,6 +4,7 @@ import { makeCat } from './chars.js';
 import fotoMelhores from '../assets/melhores-grupo.jpg';
 import fotoVale from '../assets/vale-piquenique.jpg';
 import fotoAniversario from '../assets/aniversario-grupo.jpg';
+import fotoPlacaNala from '../assets/formatura-placa-nala.jpg';
 import { SECRET_NAME, SECRET_KEY } from './secret.js';
 
 // =====================================================================
@@ -975,55 +976,169 @@ export const MEMORIES = [
   },
   // -------------------------------------------------------------------
   {
-    id: 'formatura', door: '2026', title: 'Formatura', place: '', color: 0x1f3a6e,
+    id: 'formatura', door: '2026', title: 'Formatura', place: 'Festa de formatura', color: 0x0f4d3a,
     eliminates: ['nala'],
     build(st, api) {
       st.engine = api;
-      st.floor(-12, 12, -9, 7, 0x5a3b2a, { checker: 0x52362a, tile: 1.5 });
-      st.box(0, -0.08, -1, 2.6, 0.1, 15, 0x9b1d2d, { cast: false });
-      st.room({ minX: -12, maxX: 12, minZ: -9, maxZ: 7, h: 4.4, color: 0xe9dfcf, trim: 0x1f3a6e, gaps: { e: [[3, 5]] } });
-      lights(st, { hemi: 1.3, sun: 1.0, shadow: 18 });
+      // festa de formatura (baile), pela planta: palco com cantor no fundo, pista de dança no meio
+      // e, na frente, a mesa de outro convidado (esquerda) e a mesa de Nala com a placa (direita)
+      const X = 9, ZN = -8.4, ZS = 7;
+      st.floor(-X, X, ZN, ZS, 0x2a2a31, { checker: 0x24242a, tile: 1.2 });
+      st.room({ minX: -X, maxX: X, minZ: ZN, maxZ: ZS, h: 4.6, color: 0x1b2450 });
+      lights(st, { sky: 0xb0b8ff, ground: 0x3a3048, hemi: 1.25, sun: 0.6, shadow: 12 });
+
+      // colunas brancas com luz quente embaixo
+      [-4.2, 0, 4.2].forEach(z => [-1, 1].forEach(sd => {
+        st.box(sd * (X - 0.5), 0, z, 0.6, 4.6, 0.6, 0xf1ece2, { solid: true });
+        point(st, sd * (X - 1.0), 0.5, z, 0xffa040, 3, 3.5);
+      }));
+
       // palco
-      st.box(0, 0, -7.2, 16, 0.6, 3.4, 0x3b2a1a, { solid: true });
-      st.box(-4.5, 0.6, -7.4, 1.0, 1.2, 0.7, 0x6b4a2b);
-      // faixa escondida pela cortina
-      st.sign('PARABÉNS, NALA!', 0, 3.3, -8.78, 9, 1.4, { bg: '#1f3a6e', fg: '#f2c230' });
-      const curtain = new THREE.Group(); curtain.position.set(0, 3.3, -8.65); st.add(curtain);
-      const cm = new THREE.Mesh(BOX, mat(0x9b1d2d)); cm.scale.set(9.6, 1.9, 0.1); curtain.add(cm);
-      const cs = st.sign('FORMATURA 2026', 0, 0, 0.06, 7, 1.0, { bg: null, fg: '#f2c230', parent: curtain });
-      cs.position.set(0, 0, 0.06);
-      const spot = new THREE.SpotLight(0xfff2cc, 40, 20, 0.5, 0.5, 1.2);
-      spot.position.set(0, 7, -2); spot.target.position.set(0, 0.6, -6.6); st.add(spot); st.add(spot.target);
-      [[-11, -8.4], [-10, -8.4], [10, -8.4], [11, -8.4]].forEach(([x, z], i) => balloon(st, x, z, [0xf2c230, 0x1f3a6e][i % 2], 2.8));
+      st.box(0, 0, -7.3, 13, 0.7, 2.6, 0x15151c, { solid: true });
+      st.box(0, 0.62, -5.98, 13, 0.08, 0.04, 0x7a5cff, { emissive: 0x7a5cff, ei: 1.6, cast: false });
+      st.sign('FORMATURA', 0, 2.7, ZN + 0.25, 4.4, 1.5, { bg: '#0f4d3a', fg: '#ffffff', border: '#7fe0b0' });
+      [-1, 1].forEach(sd => st.sign('2025.2', sd * 4.8, 2.5, ZN + 0.25, 2.2, 1.3, { bg: '#0f4d3a', fg: '#ffffff', border: '#7fe0b0' }));
+      st.box(0, 4.25, -6.6, 13.2, 0.16, 0.16, 0x2b2b2b, { cast: false });
+      [-1, 1].forEach(sd => st.box(sd * 6.5, 0.7, -6.6, 0.16, 3.6, 0.16, 0x2b2b2b));
 
-      // cadeiras e convidados (só quem já saiu + coringas)
-      const seated = { '-5.2,-3': 'hanna', '-3.6,-3': 'analuz', '3.6,-3': 'nanda', '5.2,-3': 'flora', '-6.8,-1': 'lisis', '6.8,-1': 'chinelo', '-3.6,-1': 'yasmim', '5.2,-1': 'alice' };
-      for (const z of [-3, -1, 1]) for (const x of [-8.4, -6.8, -5.2, -3.6, -2.0, 2.0, 3.6, 5.2, 6.8, 8.4]) {
-        st.chair(x, z, Math.PI, 0x1f3a6e);
-        const who = seated[`${x},${z}`];
-        if (who) api.npc(who, x, z, { sit: true, y: 0.1, rot: Math.PI, facePlayer: false });
+      // fachos de luz coloridos varrendo a pista
+      const beamCols = [0x3b5bff, 0x2ee86a, 0xd4ff3a, 0x9b4dff, 0x2ee86a, 0x3b5bff];
+      const beams = beamCols.map((c, i) => {
+        const geo = new THREE.ConeGeometry(0.75, 7.5, 16, 1, true); geo.translate(0, -3.75, 0);
+        const m = new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.14, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+        st.disposables.push(geo, m);
+        const cone = new THREE.Mesh(geo, m); cone.position.set(-5.5 + i * 2.2, 4.1, -6.6); st.add(cone);
+        st.box(cone.position.x, 3.95, -6.6, 0.3, 0.3, 0.3, 0x111111, { cast: false });
+        return cone;
+      });
+      const washes = [point(st, -4, 3.4, -4.2, 0x3b5bff, 9, 12), point(st, 4, 3.4, -4.2, 0x2ee86a, 9, 12), point(st, 0, 3.8, -1.5, 0x9b4dff, 7, 12)];
+      st.updaters.push((dt, t) => {
+        beams.forEach((b, i) => { b.rotation.x = -(0.55 + Math.sin(t * 0.9 + i) * 0.3); b.rotation.z = Math.sin(t * 0.7 + i * 1.3) * 0.6; });
+        washes.forEach((l, i) => { l.intensity = 6 + Math.sin(t * 2.2 + i * 2) * 4; });
+      });
+
+      // roupas de festa: mulheres de vestido, homens de roupa social
+      const skins = [0x8d5524, 0xc68642, 0xe0ac69, 0xf1c27d, 0x6b3e26, 0xd9a77c];
+      const suits = [0x151515, 0x1c2340, 0x2a2a2a];
+      const gowns = [0x0f4d3a, 0x8e1b2c, 0x1c2340, 0xc9a24a, 0x5b2a6e, 0x111111, 0xd98fa6];
+      const man = (i) => ({ skin: skins[i % 6], hair: 0x1a120c, hairStyle: 'short', shirt: 0xf2f2f2, jacket: suits[i % 3], pants: suits[i % 3], shoes: 0x111111 });
+      const woman = (i) => ({ skin: skins[(i + 2) % 6], hair: [0x1a120c, 0x3a2216, 0x6b4226][i % 3], hairStyle: ['long', 'bun', 'long', 'curly'][i % 4], shirt: gowns[i % 7], skirt: gowns[i % 7], sleeveless: true, shoes: 0x222222 });
+      const dress = (c, more = {}) => ({ shirt: c, skirt: c, sleeveless: true, shoes: 0x222222, ...more });
+
+      // banda no palco: cantor, guitarrista, baterista e duas dançarinas
+      api.npc('extra', 0, -6.7, { y: 0.7, dance: true, facePlayer: false, solid: false, look: { skin: 0xc68642, hair: 0x1a120c, hairStyle: 'short', shirt: 0x151515, pants: 0x151515, shoes: 0x111111 }, extras: ['mic'] });
+      const gt = api.npc('extra', -3.0, -7.2, { y: 0.7, facePlayer: false, solid: false, look: { skin: 0xe0ac69, hair: 0x2a1a10, hairStyle: 'short', shirt: 0x2a2a2a, pants: 0x151515 } });
+      gt.ch.holdArms = true; gt.ch.parts.armR.rotation.x = -0.7; gt.ch.parts.armL.rotation.x = -1.0;
+      const guitar = new THREE.Group(); guitar.position.set(0, -0.12, 0.26); guitar.rotation.z = 0.55; gt.ch.parts.torso.add(guitar);
+      const gb = new THREE.Mesh(BOX, mat(0xb03030)); gb.scale.set(0.42, 0.5, 0.1); gb.position.y = -0.1; guitar.add(gb);
+      const gn = new THREE.Mesh(BOX, mat(0x2a1a10)); gn.scale.set(0.07, 0.7, 0.05); gn.position.y = 0.48; guitar.add(gn);
+      // bateria
+      const DX = 3.2, DZ = -7.6;
+      const drum = (x, y, z, r, h, c, rx = 0) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 16), mat(c)); m.position.set(x, y, z); m.rotation.x = rx; m.castShadow = true; st.add(m); return m; };
+      drum(DX, 1.05, DZ + 0.55, 0.36, 0.3, 0x1c2340, Math.PI / 2);
+      drum(DX - 0.45, 1.25, DZ + 0.45, 0.17, 0.16, 0xe8e8e8);
+      drum(DX + 0.4, 1.35, DZ + 0.45, 0.16, 0.16, 0x1c2340);
+      drum(DX - 0.65, 1.75, DZ + 0.25, 0.25, 0.02, 0xd4b04a);
+      drum(DX + 0.7, 1.8, DZ + 0.2, 0.25, 0.02, 0xd4b04a);
+      st.box(DX - 0.65, 0.7, DZ + 0.25, 0.03, 1.05, 0.03, 0x777777); st.box(DX + 0.7, 0.7, DZ + 0.2, 0.03, 1.1, 0.03, 0x777777);
+      st.box(DX, 0.7, DZ - 0.25, 0.4, 0.45, 0.4, 0x222222);
+      api.npc('extra', DX, DZ - 0.25, { y: 0.8, sit: true, facePlayer: false, solid: false, look: man(4) });
+      [-5.2, 5.2].forEach((x, i) => api.npc('extra', x, -6.9, { y: 0.7, dance: true, facePlayer: false, solid: false, look: dress(0x0f6a4a, { skin: skins[i + 1], hair: 0x1a120c, hairStyle: 'long' }) }));
+
+      // pista de dança: convidados
+      const floorSpots = [[-6.4, -4.8], [-4.6, -4.0], [-3.0, -5.0], [-1.6, -4.4], [1.8, -4.9], [3.4, -4.2], [5.0, -5.0], [6.6, -4.0], [-6.8, -2.0], [-5.0, -1.2], [5.2, -1.6], [6.9, -2.6]];
+      floorSpots.forEach(([x, z], i) => {
+        const n = api.npc('extra', x, z, { dance: true, facePlayer: false, look: i % 2 ? man(i) : woman(i) });
+        n.ch.anim.t = i * 0.41;
+      });
+
+      // mesas: decoração com toalha escura, sousplat verde com flores brancas, guardanapo rosa, taças e arranjos de flores
+      const pm = (() => {
+        const c = document.createElement('canvas'); c.width = c.height = 128;
+        const g = c.getContext('2d'); g.fillStyle = '#0f4d3a'; g.fillRect(0, 0, 128, 128);
+        g.strokeStyle = '#e9f5ee'; g.lineWidth = 3;
+        [[34, 40], [92, 86], [88, 30], [30, 98]].forEach(([cx, cy]) => { for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2; g.beginPath(); g.ellipse(cx + Math.cos(a) * 9, cy + Math.sin(a) * 9, 8, 4, a, 0, Math.PI * 2); g.stroke(); } });
+        const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+        const m = new THREE.MeshLambertMaterial({ map: tex }); st.disposables.push(tex, m); return m;
+      })();
+      const mkTable = (tx, tz, len) => {
+        st.table(tx, tz, 1.3, len, 0x1d1d22);
+        const seats = [];
+        const n = Math.floor(len / 0.85);
+        for (let k = 0; k < n; k++) {
+          const z = tz - len / 2 + 0.45 + k * ((len - 0.9) / Math.max(1, n - 1));
+          [-1, 1].forEach(sd => {
+            const mm = new THREE.Mesh(BOX, pm); mm.scale.set(0.42, 0.012, 0.5); mm.position.set(tx + sd * 0.38, 0.856, z); st.add(mm);
+            st.box(tx + sd * 0.4, 0.86, z + 0.13, 0.13, 0.05, 0.16, 0xf4a6b8, { cast: false });
+            st.box(tx + sd * 0.22, 0.85, z - 0.16, 0.06, 0.17, 0.06, 0xdfe8ef, { opacity: 0.5, cast: false });
+            st.chair(tx + sd * 1.05, z, sd < 0 ? Math.PI / 2 : -Math.PI / 2, 0x151515);
+            seats.push([tx + sd * 1.05, z, sd < 0 ? Math.PI / 2 : -Math.PI / 2]);
+          });
+        }
+        [-len / 4, len / 4].forEach(dz2 => {
+          const cz = tz + dz2;
+          st.box(tx, 0.85, cz, 0.14, 0.3, 0.14, 0xdfe8ef, { opacity: 0.6, cast: false });
+          for (let k = 0; k < 9; k++) st.box(tx + Math.cos(k * 2.4) * 0.14 * (k % 3), 1.12 + (k % 3) * 0.06, cz + Math.sin(k * 2.4) * 0.14 * (k % 3), 0.13, 0.13, 0.13, k % 4 ? 0xffffff : 0xf4d6e0, { cast: false });
+        });
+        // luz quente do lustre em cima da mesa
+        point(st, tx, 3.3, tz, 0xffd9a0, 4, 6);
+        return seats;
+      };
+      const guestSeats = mkTable(-4.0, 3.6, 3.4);
+      const nalaSeats = mkTable(4.0, 3.6, 5.0);
+      // placa com a foto de Nala na mesa dela
+      st.box(4.0, 0.85, 3.6, 0.06, 1.35, 0.06, 0x9a9a9a);
+      st.box(4.0, 2.2, 3.6, 1.0, 1.36, 0.04, 0xf4f4f4);
+      if (fotoPlacaNala) {
+        const tex = new THREE.TextureLoader().load(fotoPlacaNala); tex.colorSpace = THREE.SRGBColorSpace;
+        const pmat = new THREE.MeshBasicMaterial({ map: tex }); st.disposables.push(tex, pmat);
+        const ph = new THREE.Mesh(new THREE.PlaneGeometry(0.94, 1.3), pmat); ph.position.set(4.0, 2.88, 3.63); st.add(ph);
       }
-      api.npc('dudao', 9.5, 4.2, { ambient: 'Cadê a Balena?', rot: -0.6, lines: [{ text: 'Cadê a Balena?' }], label: 'Falar com Dudão', once: false });
+      // convidados da outra mesa
+      guestSeats.slice(0, 5).forEach(([x, z, r], i) => api.npc('extra', x, z, { sit: true, y: 0.1, rot: r, facePlayer: false, look: i % 2 ? man(i + 1) : woman(i + 3) }));
 
-      const nala = api.npc('nala', 0, -6.4, {
-        y: 0.6, extras: ['gown', 'gradcap'], r: 3.2, label: 'Falar com quem se formou',
+      // a chapa (todo mundo foi)
+      const grey = { name: '', label: 'Quem é?', once: false, lines: [{ who: 'thought', text: 'Ainda não sei quem é.' }] };
+      api.npc('flora', -1.4, -2.0, { dance: true, look: dress(0xc0182a) });
+      api.npc('hanna', 1.5, -1.9, { dance: true, look: dress(0x8a5a3a) });
+      api.npc('alice', 2.5, -3.0, { dance: true, look: dress(0xb9a3d6) });
+      api.npc('lisis', -0.6, -3.6, { dance: true, look: dress(0xf2f2f2, { longSleeves: true }) });
+      api.npc('analuz', -2.6, -3.1, { dance: true, look: dress(0x1c2a5a) });
+      api.npc('yasmim', 1.0, -3.9, { dance: true, look: dress(0x6e1a2e) });
+      api.npc('nanda', nalaSeats[2][0], nalaSeats[2][1], { sit: true, y: 0.1, rot: nalaSeats[2][2], facePlayer: false, look: dress(0xe8d3a8) });
+      api.npc('chinelo', nalaSeats[5][0], nalaSeats[5][1], { sit: true, y: 0.1, rot: nalaSeats[5][2], facePlayer: false, look: dress(0x151515) });
+      // ainda sem rosto: Breno, de terno
+      api.npc('boneco', 3.4, -2.2, { ...grey, dance: true, look: { jacket: 0x5f5f5f, shirt: 0xbdbdbd } });
+      // Dudão procurando Nala pelo salão
+      const dudao = api.npc('dudao', -5.5, 0.4, { ambient: 'Cadê a Balena?', look: dress(0x111111, { hairStyle: 'long' }), extras: ['chain'], lines: [{ text: 'Cadê a Balena?' }], label: 'Falar com Dudão', once: false });
+      wander(st, dudao, [[-1.2, 0.8], [5.8, 0.4], [1.0, 0.9], [-5.8, 0.5]], { speed: 1.2, pause: [0.8, 2.0] });
+
+      // Nala, a formanda, de vestido verde de cetim, dançando no meio da pista
+      const nala = api.npc('nala', 0.1, -2.6, {
+        dance: true, r: 2.2, label: 'Falar com a formanda',
+        look: dress(0x0f5a42, { strapless: true, hairStyle: 'bun', shoes: 0x0f5a42 }),
         lines: [{ text: 'AAAAAAAAAAAAAAAAAAAAA', style: 'shout', sfx: 'scream' }],
         onInteract: async () => {
           api.sfx.applause();
-          await api.tween(curtain.position, { y: 7.5 }, 1400);
           await api.eliminate('nala');
           await api.complete('Não era a minha formatura.');
         },
       });
+      // bottons no peito
+      [[-0.16, 0.12, 0xd7372f], [0.0, 0.18, 0x3fa7d6], [0.15, 0.1, 0xf2c230], [-0.04, 0.03, 0x7fe0b0]].forEach(([x, y, c]) => {
+        const b = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.02, 10), mat(c)); b.rotation.x = Math.PI / 2; b.position.set(x, y, 0.2); nala.ch.parts.torso.add(b);
+      });
       nala.facePlayer = false;
-      api.exit(11.6, 4, { rotY: -Math.PI / 2 });
+
+      api.exit(X - 0.45, 5.6, { rotY: -Math.PI / 2 });
+      st.flags.danceIdle = true;
 
       return {
-        bounds: { minX: -11.6, maxX: 11.6, minZ: -5.5, maxZ: 6.6 },
-        spawn: { x: 0, z: 5.4, rot: Math.PI },
-        camClamp: { minX: -4, maxX: 4, minZ: -2.5, maxZ: 2 },
-        background: 0xe9dfcf,
-        music: 'calmo',
+        bounds: { minX: -X + 0.7, maxX: X - 0.7, minZ: -5.6, maxZ: ZS - 0.5 },
+        spawn: { x: 0, z: 5.8, rot: Math.PI },
+        camClamp: { minX: -3.5, maxX: 3.5, minZ: -3, maxZ: 1.5 },
+        background: 0x0b0d1e,
+        music: 'festa',
       };
     },
   },

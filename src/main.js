@@ -107,6 +107,9 @@ function addTag(n) {
   tagLayer.appendChild(el);
   tags.push({ n, el });
 }
+function revealName(n) {
+  if (n && n.nameUntilTalk) { n.nameUntilTalk = false; n.hideName = false; }
+}
 function clearTags() { tags.forEach(t => t.el.remove()); tags.length = 0; }
 function updateTags() {
   const talking = new Set(bubbles.map(b => b.npc).filter(Boolean));
@@ -156,6 +159,7 @@ function makeBubble({ who, text, style = '', name = null, ambient = false }) {
     else if (who && who.lookKey) label = NAMES[who.lookKey];
   }
   if (isPlayer && !name) label = null;
+  if (name === null && who && who.nameUntilTalk) label = null;
   el.innerHTML = `${label ? `<div class="who">${label}</div>` : ''}<div class="txt"></div>`;
   bubbleLayer.appendChild(el);
   const b = { el, txt: el.querySelector('.txt'), text: String(text), shown: 0, done: false, anchor: anchorFor(who), ambient, npc: who && who.ch ? who : null };
@@ -294,6 +298,7 @@ async function eliminate(key) {
   if (state.eliminated.has(key)) return;
   const c = CANDIDATES.find(x => x.key === key);
   state.eliminated.add(key);
+  if (state.stage) state.stage.npcs.forEach(n => { if (n.lookKey === key) revealName(n); });
   refreshHud();
   sfx.eliminate();
   toast(c ? `Não sou ${c.name}.` : '');
@@ -458,13 +463,21 @@ const api = {
     };
     if (opts.solid !== false) n.collider = st.solid(x - 0.4, x + 0.4, z - 0.4, z + 0.4);
     if (opts.hideName) n.hideName = true;
+    // quem sai da lista nesta memória só mostra o nome depois da primeira conversa
+    const mem = state.where === 'memory' ? MEMORIES[state.memoryIndex] : null;
+    if (mem && (mem.eliminates || []).includes(lookKey) && !state.eliminated.has(lookKey) && n.name) {
+      n.hideName = true; n.nameUntilTalk = true;
+    }
     st.npcs.push(n);
     addTag(n);
     if (opts.lines || opts.onInteract) {
+      let label = opts.label || 'Falar';
+      if (n.nameUntilTalk && label.includes(n.name)) label = 'Falar';
       api.interact({
-        pos: () => n.root.position, r: opts.r || 2.4, label: opts.label || 'Falar', once: opts.once,
+        pos: () => n.root.position, r: opts.r || 2.4, label, once: opts.once,
         enabled: opts.enabled,
         onInteract: async () => {
+          revealName(n);
           if (opts.lines) await say(opts.lines.map(l => ({ ...l, who: l.who === undefined ? n : l.who })));
           if (opts.onInteract) await opts.onInteract(n);
         },
