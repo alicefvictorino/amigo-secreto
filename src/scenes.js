@@ -5,7 +5,7 @@ import fotoMelhores from '../assets/melhores-grupo.jpg';
 import fotoVale from '../assets/vale-piquenique.jpg';
 import fotoAniversario from '../assets/aniversario-grupo.jpg';
 import fotoPlacaNala from '../assets/formatura-placa-nala.jpg';
-import fotoFormatura from '../assets/formatura-grupo.jpg';
+import fotoFormatura from '../assets/formatura-nala.jpg';
 import { SECRET_NAME, SECRET_KEY } from './secret.js';
 
 // =====================================================================
@@ -1112,7 +1112,17 @@ export const MEMORIES = [
 
       // a chapa (todo mundo foi)
       const grey = { name: '', label: 'Quem é?', once: false, lines: [{ who: 'thought', text: 'Ainda não sei quem é.' }] };
-      api.npc('flora', -1.4, -2.0, { dance: true, look: dress(0xc0182a) });
+      // Flora segurando a Balena (garrafa rosa com uma baleia) bem alto, longe de Dudão
+      const flora = api.npc('flora', -2.6, -0.5, { rot: 1.35, facePlayer: false, look: dress(0xc0182a) });
+      flora.ch.holdArms = true; flora.ch.parts.armL.rotation.x = -2.75; flora.ch.parts.armL.rotation.z = -0.35;
+      const bal = new THREE.Group(); bal.position.set(0, -0.72, 0.04); bal.rotation.x = 2.75; bal.rotation.z = 0.35; bal.scale.setScalar(1.25); flora.ch.parts.armL.add(bal);
+      const bpart = (w, h, d, c, x, y, z, o = {}) => { const m = new THREE.Mesh(BOX, mat(c, o)); m.scale.set(w, h, d); m.position.set(x, y, z); m.castShadow = true; bal.add(m); return m; };
+      bpart(0.17, 0.34, 0.17, 0xff7eb6, 0, 0.17, 0);
+      bpart(0.08, 0.13, 0.08, 0xff7eb6, 0, 0.4, 0);
+      bpart(0.09, 0.05, 0.09, 0xf2f2f2, 0, 0.49, 0);
+      bpart(0.175, 0.14, 0.02, 0xfdf3f7, 0, 0.18, 0.08, { cast: false });
+      bpart(0.09, 0.045, 0.02, 0x1f4fa0, -0.01, 0.18, 0.092);
+      const tail = bpart(0.03, 0.06, 0.02, 0x1f4fa0, 0.05, 0.205, 0.092); tail.rotation.z = -0.6;
       api.npc('hanna', 1.5, -1.9, { dance: true, look: dress(0x8a5a3a) });
       api.npc('alice', 2.5, -3.0, { dance: true, look: dress(0xb9a3d6) });
       api.npc('lisis', -0.6, -3.6, { dance: true, look: dress(0xf2f2f2, { longSleeves: true }) });
@@ -1122,9 +1132,9 @@ export const MEMORIES = [
       api.npc('chinelo', nalaSeats[5][0], nalaSeats[5][1], { sit: true, y: 0.1, rot: nalaSeats[5][2], facePlayer: false, look: dress(0x151515) });
       // ainda sem rosto: Breno, de terno
       api.npc('boneco', 3.4, -2.2, { ...grey, dance: true, look: { jacket: 0x5f5f5f, shirt: 0xbdbdbd } });
-      // Dudão procurando Nala pelo salão
-      const dudao = api.npc('dudao', -5.5, 0.4, { ambient: 'Cadê a Balena?', look: dress(0x111111, { hairStyle: 'long' }), extras: ['chain'], lines: [{ text: 'Cadê a Balena?' }], label: 'Falar com Dudão', once: false });
-      wander(st, dudao, [[-1.2, 0.8], [5.8, 0.4], [1.0, 0.9], [-5.8, 0.5]], { speed: 1.2, pause: [0.8, 2.0] });
+      // Dudão pedindo a Balena para Flora, com o braço esticado
+      const dudao = api.npc('dudao', -1.45, -0.25, { rot: -1.8, facePlayer: false, ambient: 'Me dá a Balena!', ambientR: 3.5, look: dress(0x111111, { hairStyle: 'long' }), extras: ['chain'], lines: [{ text: 'Me dá a Balena!' }], label: 'Falar com Dudão', once: false });
+      dudao.ch.holdArms = true; dudao.ch.parts.armR.rotation.x = -1.45; dudao.ch.parts.armL.rotation.x = -0.9;
 
       // Nala, a formanda, de vestido verde de cetim, dançando no meio da pista
       const nala = api.npc('nala', 0.1, -2.6, {
@@ -1143,8 +1153,8 @@ export const MEMORIES = [
       });
       nala.facePlayer = false;
 
-      // easter egg: celular caído perto da coluna da esquerda com a foto em grupo da festa
-      photoClue(st, api, { x: -7.5, z: 2.0, rot: 0.7, photo: fotoFormatura, caption: 'Formatura 2026', thought: 'Todo mundo tão feliz... Queria lembrar quem eu sou.' });
+      // easter egg: celular caído perto da coluna da esquerda com uma foto da festa
+      photoClue(st, api, { x: -7.5, z: 2.0, rot: 0.7, photo: fotoFormatura, caption: 'Formatura 2026', thought: 'Que taça enorme... Queria lembrar quem eu sou.' });
 
       api.exit(X - 0.45, 5.6, { rotY: -Math.PI / 2 });
       st.flags.danceIdle = true;
