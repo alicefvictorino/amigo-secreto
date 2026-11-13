@@ -73,6 +73,18 @@ function balloon(st, x, z, color, y = 2.6) {
   rope(st, new THREE.Vector3(x, y, z), new THREE.Vector3(x + 0.1, 0.9, z + 0.1), 0.02, 0xdddddd);
 }
 
+// deixa uma parede (e o que está pendurado nela) transparente quando cond() for verdade
+function fader(st, meshes, cond) {
+  const mats = meshes.map(m => { m.material = m.material.clone(); m.material.transparent = true; st.disposables.push(m.material); return m.material; });
+  let o = 1;
+  st.updaters.push((dt) => {
+    const want = cond() ? 0.15 : 1;
+    o += (want - o) * Math.min(1, dt * 8);
+    mats.forEach(mm => { mm.opacity = o; mm.depthWrite = o > 0.95; });
+    meshes.forEach(m => { m.castShadow = o > 0.95; });
+  });
+}
+
 // faz um personagem andar devagar por alguns pontos, parando um pouco em cada um.
 // para quando o boneco chega perto, para não atrapalhar a conversa nem prender ninguém.
 function wander(st, n, pts, { speed = 1.1, pause = [1.2, 3.2] } = {}) {
@@ -1255,67 +1267,164 @@ export const MEMORIES = [
     eliminates: ['breno'],
     build(st, api) {
       st.engine = api;
-      // corredor (z 0..4) e salas ao norte
-      st.floor(-17, 17, 0, 4.4, 0xcfd6dc, { checker: 0xbcc5cc, tile: 1.1 });
-      st.floor(-17, -4.2, -9.5, 0, 0xd9c09a, { checker: 0xcdb38c, tile: 1.1 });
-      st.floor(-4.2, 4.2, -9.5, 0, 0xe3eef3, { checker: 0xcfe0e8, tile: 0.8 });
-      st.floor(4.2, 17, -9.5, 0, 0xc9b9a6, { checker: 0xbcab97, tile: 1.1 });
-      lights(st, { hemi: 1.6, sun: 1.2, shadow: 20 });
-      const wall = 0xeae3d2;
-      // paredes externas
-      st.box(0, 0, -9.7, 34.4, 3.4, 0.4, wall, { solid: true });
-      st.box(-17.2, 0, -2.6, 0.4, 3.4, 14.4, wall, { solid: true });
-      st.box(17.2, 0, -2.6, 0.4, 3.4, 14.4, wall, { solid: true });
-      st.box(0, 0, 4.6, 34.4, 0.45, 0.4, wall, { solid: true });
-      // divisórias entre as salas
-      st.box(-4.2, 0, -4.8, 0.3, 3.2, 9.4, wall, { solid: true });
-      st.box(4.2, 0, -4.8, 0.3, 3.2, 9.4, wall, { solid: true });
-      // parede entre corredor e salas (baixa, com portas)
-      const gaps = [[-8.2, -6.4], [-0.9, 0.9], [6.4, 8.2]];
-      let cur = -17;
-      gaps.forEach(([a, b]) => { st.box((cur + a) / 2, 0, -0.05, a - cur, 0.7, 0.3, 0x2f6fae, { solid: true }); cur = b; });
-      st.box((cur + 17) / 2, 0, -0.05, 17 - cur, 0.7, 0.3, 0x2f6fae, { solid: true });
-      gaps.forEach(([a, b]) => { st.box(a, 0, -0.05, 0.2, 2.6, 0.35, 0x8a5a3c); st.box(b, 0, -0.05, 0.2, 2.6, 0.35, 0x8a5a3c); st.box((a + b) / 2, 2.6, -0.05, b - a + 0.2, 0.2, 0.35, 0x8a5a3c); });
-      st.sign('SALA', -7.3, 3.15, 0.15, 1.6, 0.45, { bg: '#2f6fae', fg: '#ffffff' });
-      st.sign('BANHEIRO', 0, 3.15, 0.15, 2.0, 0.45, { bg: '#2f6fae', fg: '#ffffff' });
-      st.sign('COORDENAÇÃO', 7.3, 3.15, 0.15, 2.6, 0.45, { bg: '#2f6fae', fg: '#ffffff' });
-      // armários no corredor
-      for (let i = 0; i < 5; i++) st.box(-16.6, 0, 0.8 + i * 0.7, 0.6, 2.2, 0.65, [0x3d7a4f, 0x2f6fae][i % 2], { solid: true });
-      st.sign('MURAL', 15.8, 1.8, 2.2, 1.6, 1.0, { bg: '#c89b6b', fg: '#2b1d14', rotY: -Math.PI / 2 });
+      // pela planta: banheiro e coordenação em cima, corredor no meio e a sala de aula embaixo
+      const WALL = 0xeae3d2, TRIM = 0x2f6fae, H = 3.2;
+      const wallX = (z, x1, x2, h = H, c = WALL) => st.box((x1 + x2) / 2, 0, z, x2 - x1, h, 0.3, c, { solid: true });
+      const wallZ = (x, z1, z2, h = H, c = WALL) => st.box(x, 0, (z1 + z2) / 2, 0.3, h, z2 - z1, c, { solid: true });
+      const glass = (x, z, w, d) => st.box(x, 0.9, z, w, 1.7, d, 0xbfe3f0, { opacity: 0.28, cast: false });
+      lights(st, { hemi: 1.6, sun: 1.1, shadow: 22 });
 
-      // ---- SALA: carteiras, quadro e alunos de farda
-      st.box(-10.6, 0.9, -9.45, 7.6, 2.0, 0.1, 0x2f5233, { cast: false });
-      st.sign('APRESENTAÇÕES DO\nSARAU EM BREVE', -10.6, 1.9, -9.38, 7.2, 1.8, { bg: '#2f5233', fg: '#f4f4f4', chalk: true, weight: 600 });
-      st.table(-14.6, -7.6, 1.8, 0.9, 0x8b5a2b);
-      const desks = [];
-      for (const z of [-5.6, -3.6, -1.6]) for (const x of [-14.4, -12.2, -10.0, -7.8, -5.6]) { deskWithChair(st, x, z); desks.push([x - 0.2, z + 0.25]); }
-      const classmates = ['hanna', 'analuz', 'flora', 'dudao', 'nala', 'lisis', 'chinelo', 'alice'];
-      const seatIdx = [0, 2, 3, 5, 6, 8, 11, 13];
-      classmates.forEach((k, i) => { const [x, z] = desks[seatIdx[i]]; api.npc(k, x, z, { sit: true, y: 0.02, rot: Math.PI, facePlayer: false, look: FARDA, solid: false }); });
+      // pisos
+      st.floor(-11.6, -4.6, -10, -3, 0xf2f4f5, { checker: 0xe1e6e9, tile: 0.7 });   // banheiro
+      st.floor(-4.6, -1.8, -10, -3, 0xcfd6dc, { checker: 0xbcc5cc, tile: 1.1 });    // passagem
+      st.floor(-1.8, 7.4, -10, -3, 0xd9c09a, { checker: 0xcdb38c, tile: 1.1 });     // coordenação
+      st.floor(-8, 6, -3, -0.8, 0xcfd6dc, { checker: 0xbcc5cc, tile: 1.1 });        // corredor
+      st.floor(-4.75, -1.6, -0.8, 10.1, 0xcfd6dc, { checker: 0xbcc5cc, tile: 1.1 }); // corredor até a sala
+      st.floor(-1.6, 11.6, -0.8, 10.1, 0xe8e4da, { checker: 0xdcd7cb, tile: 1.1 }); // sala
+
+      // ---------------- BANHEIRO ----------------
+      wallX(-10, -11.6, -4.6); wallZ(-11.6, -10, -3);
+      // parede de baixo: baixa, com janela de vidro do lado de fora
+      wallX(-3, -11.6, -4.6, 0.9);
+      glass(-9.8, -3, 2.4, 0.06);
+      // parede da direita com o portão de entrada embaixo
+      wallZ(-4.6, -10, -4.9);
+      st.box(-4.6, 0, -3.4, 0.3, H, 0.4, WALL, { solid: true });
+      // cabines na parede da esquerda (a do meio fechada)
+      const CAB = 0x9fbccc;
+      [-8.3, -6.6, -4.9].forEach(z => st.box(-10.8, 0, z, 1.6, 2.2, 0.08, CAB));
+      st.box(-10.8, 0, -10 + 0.1, 1.6, 2.2, 0.08, CAB);
+      [[-9.15, false], [-7.45, true], [-5.75, false]].forEach(([zc, closed]) => {
+        st.box(-11.25, 0, zc, 0.45, 0.45, 0.4, 0xffffff); st.box(-11.45, 0.45, zc, 0.12, 0.5, 0.4, 0xffffff);
+        const door = st.box(-10.0, 0.15, zc, 0.06, 1.95, 1.5, closed ? 0x5d8aa8 : CAB);
+        if (!closed) { door.rotation.y = 0.9; door.position.x += 0.45; door.position.z += 0.3; }
+      });
+      st.solid(-11.6, -9.95, -10, -4.85);
+      // bancada de granito cinza com 3 pias e espelho da pia até quase o teto
+      st.box(-5.05, 0, -7.5, 0.8, 0.9, 4.6, 0x7d8285, { solid: true });
+      [-9.0, -7.5, -6.0].forEach(z => {
+        st.box(-5.1, 0.88, z, 0.5, 0.05, 0.6, 0xffffff, { cast: false });
+        st.box(-4.8, 0.9, z, 0.08, 0.25, 0.08, 0xc0c0c0, { cast: false });
+      });
+      st.mirror(-4.77, 2.05, -7.5, 4.4, 2.0, -Math.PI / 2);
+      st.sign('BANHEIRO', -4.43, 2.75, -3.0, 1.6, 0.4, { bg: '#2f6fae', fg: '#ffffff', rotY: Math.PI / 2 });
+
+      // ---------------- PASSAGEM ENTRE BANHEIRO E COORDENAÇÃO ----------------
+      wallX(-10, -4.6, -1.8);
+
+      // ---------------- COORDENAÇÃO ----------------
+      wallX(-10, -1.8, 7.4); wallZ(7.4, -10, -3);
+      // parede da esquerda: porta em cima e janela de vidro embaixo
+      wallZ(-1.8, -10, -8.6); wallZ(-1.8, -7.4, -6.7);
+      wallZ(-1.8, -6.7, -3, 0.9); glass(-1.8, -4.85, 0.06, 3.5);
+      // parede de baixo: janela de vidro para o corredor
+      wallX(-3, -1.8, 7.4, 0.9); glass(2.3, -3, 5.6, 0.06);
+      st.sign('COORDENAÇÃO', -1.97, 2.75, -8.0, 2.0, 0.4, { bg: '#2f6fae', fg: '#ffffff', rotY: -Math.PI / 2 });
+      // mesa comprida, duas cadeiras de um lado e a da coordenação do outro, armário cinza no canto
+      st.table(3.25, -5.6, 1.3, 3.8, 0x7a4a2a);
+      st.box(3.4, 0.85, -6.3, 0.5, 0.4, 0.08, 0x2b2b2b); st.box(3.4, 0.85, -6.25, 0.12, 0.08, 0.2, 0x2b2b2b);
+      [[-6.5], [-4.8]].forEach(([z]) => st.chair(2.0, z, Math.PI / 2, 0x333333));
+      st.chair(4.55, -5.9, -Math.PI / 2, 0x333333);
+      st.box(6.7, 0, -8.4, 1.1, 2.3, 3.0, 0x8a8a8a, { solid: true });
+      st.box(6.14, 1.0, -8.4, 0.02, 0.06, 0.4, 0x555555, { cast: false });
+      api.npc('titia', 4.55, -5.9, { sit: true, y: 0.1, rot: -Math.PI / 2, facePlayer: false, solid: false });
+      api.npc('mayara', 2.0, -6.5, { sit: true, y: 0.1, rot: Math.PI / 2, facePlayer: false, solid: false, ambient: 'Laura é perversa!', ambientR: 5 });
+
+      // ---------------- CORREDORES ----------------
+      wallZ(-8, -3, -0.8);              // ponta esquerda do corredor
+      wallZ(6, -3, -0.8);               // ponta direita
+      wallX(-0.8, -8, -4.75, 0.5);      // borda de baixo (lado de fora)
+      wallZ(-4.75, -0.8, 10.1);         // parede do corredor que desce até a sala
+      wallX(10.1, -4.75, -1.6, 0.5);
+
+      // ---------------- SALA DE AULA ----------------
+      // parede de cima com pôsteres de trabalhos em cartolina (fica transparente quando o boneco está atrás dela)
+      const fadeList = [];
+      fadeList.push(wallX(-0.8, -1.6, 11.6));
+      fadeList.push(st.box(4.0, 0, -0.62, 13.2, 0.35, 0.04, TRIM, { cast: false }));
+      const posterCols = [0xf2c230, 0x3fa7d6, 0xe8743b, 0x7fc8a9, 0xd98fa6, 0xb9a3d6];
+      for (let i = 0; i < 6; i++) {
+        const px = -0.4 + i * 2.0, py = 1.35 + (i % 2) * 0.25, pz = -0.62;
+        fadeList.push(st.box(px, py, pz, 1.3, 0.95, 0.03, posterCols[i], { cast: false }));
+        fadeList.push(st.box(px - 0.25, py + 0.55, pz + 0.02, 0.6, 0.12, 0.02, 0xffffff, { cast: false }));
+        [0.32, 0.18].forEach(dy => fadeList.push(st.box(px + 0.1, py + dy, pz + 0.02, 0.9, 0.05, 0.02, 0x555555, { cast: false })));
+        fadeList.push(st.box(px - 0.32, py + 0.08, pz + 0.02, 0.4, 0.06, 0.02, 0xffffff, { cast: false }));
+      }
+      fader(st, fadeList, () => api.player && api.player.root.position.z < -0.9);
+      // parede da esquerda com a porta embaixo; placa SALA do lado do corredor
+      wallZ(-1.6, -0.8, 8.1); wallZ(-1.6, 9.2, 10.1);
+      st.sign('SALA', -1.77, 2.75, 8.65, 1.2, 0.4, { bg: '#2f6fae', fg: '#ffffff', rotY: -Math.PI / 2 });
+      // parede da direita: janelas escuras e altas com cortinas bege
+      wallZ(11.6, -0.8, 10.1);
+      [1.2, 3.6, 6.0, 8.4].forEach(z => {
+        st.box(11.43, 0.9, z, 0.04, 2.1, 1.7, 0x26313d, { cast: false });
+        st.box(11.38, 0.75, z - 0.75, 0.08, 2.4, 0.35, 0xe8d9b5, { cast: false });
+        st.box(11.38, 0.75, z + 0.75, 0.08, 2.4, 0.35, 0xe8d9b5, { cast: false });
+      });
+      // parede de baixo: baixa para a câmera; por dentro, o quadro branco e os pôsteres do alfabeto
+      wallX(10.1, -1.6, 11.6, 0.5);
+      const inner = new THREE.Mesh(new THREE.PlaneGeometry(13.2, 2.7), new THREE.MeshLambertMaterial({ color: WALL }));
+      inner.position.set(5.0, 1.85, 9.94); inner.rotation.y = Math.PI; st.add(inner); st.disposables.push(inner.geometry, inner.material);
+      st.box(2.0, 1.3, 9.9, 5.8, 1.75, 0.05, 0x9aa3ab, { cast: false });
+      st.sign('APRESENTAÇÕES DO\nSARAU EM BREVE', 2.0, 2.18, 9.86, 5.5, 1.55, { bg: '#fbfbfb', fg: '#1f4fa0', rotY: Math.PI, weight: 600 });
+      const abc = (() => {
+        const c = document.createElement('canvas'); c.width = 1024; c.height = 160;
+        const g = c.getContext('2d'); g.fillStyle = '#eae3d2'; g.fillRect(0, 0, 1024, 160);
+        const cols = ['#d7372f', '#2f6fae', '#2f7a4e', '#f2c230', '#8e44ad', '#e8743b'];
+        g.font = 'bold 54px Fredoka, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach((L, i) => {
+          const cx = (i % 13) * 78 + 8, cy = Math.floor(i / 13) * 80 + 4;
+          g.fillStyle = cols[i % cols.length]; g.fillRect(cx, cy, 70, 72);
+          g.fillStyle = '#ffffff'; g.fillText(L, cx + 35, cy + 39);
+        });
+        const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; st.disposables.push(tex);
+        return tex;
+      })();
+      const abcM = new THREE.Mesh(new THREE.PlaneGeometry(5.6, 0.86), new THREE.MeshBasicMaterial({ map: abc, toneMapped: false }));
+      abcM.position.set(2.0, 0.92, 9.9); abcM.rotation.y = Math.PI; st.add(abcM); st.disposables.push(abcM.geometry, abcM.material);
+      // mesa e cadeira do professor entre dois armários cinza
+      st.box(7.0, 0, 8.9, 1.2, 2.2, 2.1, 0x8a8a8a, { solid: true });
+      st.box(10.2, 0, 8.9, 1.1, 2.2, 2.3, 0x8a8a8a, { solid: true });
+      st.table(8.6, 8.5, 1.4, 0.8, 0x2f6fae);
+      st.chair(8.6, 9.3, Math.PI, 0x2f6fae);
+      // umas 7 fileiras de 6 carteiras azuis, viradas para o quadro
+      const seats = [];
+      for (let r = 0; r < 7; r++) for (let c = 0; c < 6; c++) {
+        const x = 0.2 + c * 1.85, z = 0.35 + r * 0.95;
+        st.box(x, 0.68, z + 0.32, 0.9, 0.07, 0.5, 0x2f6fae, { solid: true });
+        st.box(x, 0, z + 0.32, 0.07, 0.68, 0.07, 0x666666, { cast: false });
+        st.box(x, 0.4, z - 0.22, 0.48, 0.07, 0.45, 0x2f6fae, { cast: false });
+        st.box(x, 0.47, z - 0.46, 0.48, 0.5, 0.06, 0x2f6fae, { cast: false });
+        st.box(x, 0, z - 0.22, 0.06, 0.4, 0.06, 0x666666, { cast: false });
+        seats.push([x, z - 0.22]);
+      }
+      const at = (r, c) => seats[r * 6 + c];
+      const classmates = [['hanna', 5, 1], ['analuz', 5, 3], ['flora', 4, 0], ['dudao', 4, 4], ['nala', 3, 2], ['lisis', 3, 5], ['chinelo', 2, 1], ['alice', 2, 3]];
+      classmates.forEach(([k, r, c]) => { const [x, z] = at(r, c); api.npc(k, x, z, { sit: true, y: 0.02, rot: 0, facePlayer: false, look: FARDA, solid: false }); });
+      const skins = [0x8d5524, 0xc68642, 0xe0ac69, 0xf1c27d, 0x6b3e26, 0xd9a77c];
+      [[6, 0], [6, 4], [5, 5], [4, 2], [3, 0], [1, 2], [1, 4], [0, 1]].forEach(([r, c], i) => {
+        const [x, z] = at(r, c);
+        api.npc('extra', x, z, { sit: true, y: 0.02, rot: 0, facePlayer: false, solid: false, look: { ...FARDA, skin: skins[i % 6], hair: [0x1a120c, 0x3a2216, 0x6b4226][i % 3], hairStyle: ['short', 'long', 'curly', 'bun'][i % 4] } });
+      });
       let salaDone = false;
       st.updaters.push(() => {
         const p = api.player.root.position;
-        if (!salaDone && p.z < -0.6 && p.x < -4.2 && !api.state.dialog && !api.state.cutscene) {
+        if (!salaDone && p.x > -1.3 && p.z > -0.5 && !api.state.dialog && !api.state.cutscene) {
           salaDone = true; st.flags.sala = true;
           api.state.cutscene++;
-          api.thought('Minha sala.').then(() => { api.state.cutscene--; checkBreno(); });
+          (async () => {
+            await api.camTo(new THREE.Vector3(3.2, 3.4, 3.2), new THREE.Vector3(2.0, 1.6, 9.9), 1000);
+            await api.thought('Minha sala.');
+            api.camFollow();
+            api.state.cutscene--;
+            checkBreno();
+          })();
         }
       });
 
-      // ---- BANHEIRO: pias, espelho, cabines
-      st.box(-2.4, 0, -9.1, 3.0, 0.9, 0.7, 0xffffff, { solid: true });
-      st.mirror(-2.4, 2.0, -9.47, 2.8, 1.2, 0);
-      const stallZ = -6.6;
-      for (let i = 0; i < 3; i++) {
-        const z0 = -9.5 + i * 1.6;
-        st.box(2.4, 0, z0 + 1.6, 3.4, 2.2, 0.1, 0xb9d3e0, { solid: true });
-        if (i === 1) st.box(0.75, 0, z0 + 0.8, 0.1, 2.0, 1.5, 0x5d8aa8, { solid: true });
-      }
-      st.box(0.75, 0, -8.7, 0.1, 2.0, 1.5, 0xb9d3e0, { solid: true });
-      st.box(0.75, 0, -5.5, 0.1, 2.0, 1.5, 0xb9d3e0, { solid: true });
-      st.solid(0.8, 4.0, -9.5, -4.6);
-      const stallAnchor = new THREE.Vector3(2.2, 2.2, stallZ - 0.5);
-      const yasmim = api.npc('yasmim', -0.8, -6.6, { rot: -Math.PI / 2, look: FARDA });
+      // ---------------- BANHEIRO: Yasmim e a cabine fechada ----------------
+      const stallAnchor = new THREE.Vector3(-10.8, 2.3, -7.45);
+      const yasmim = api.npc('yasmim', -8.8, -7.0, { rot: -Math.PI / 2, look: FARDA });
       api.interact({
         pos: () => yasmim.root.position, r: 2.4, label: 'Falar com Yasmim',
         onInteract: async () => {
@@ -1327,16 +1436,10 @@ export const MEMORIES = [
           checkBreno();
         },
       });
-      api.interact({ x: -2.4, z: -8.2, r: 1.6, label: 'Olhar no espelho', once: false, onInteract: () => api.thought('Ainda sem rosto.') });
+      api.interact({ x: -5.9, z: -7.5, r: 1.5, label: 'Olhar no espelho', once: false, onInteract: () => api.thought('Ainda sem rosto.') });
 
-      // ---- COORDENAÇÃO: Titia, Mayara e Breno espiando
-      st.table(11.5, -6.8, 3.0, 1.2, 0x7a4a2a);
-      st.box(11.5, 0.85, -6.9, 0.5, 0.4, 0.4, 0x333333);
-      st.box(15.8, 0, -8.5, 1.4, 2.4, 1.6, 0x8a8a8a, { solid: true });
-      api.npc('titia', 11.5, -7.9, { sit: true, y: 0.1, facePlayer: false, solid: false });
-      st.chair(11.5, -7.9, 0, 0x333333);
-      api.npc('mayara', 10.6, -5.2, { rot: Math.PI - 0.3, ambient: 'Laura é perversa!', facePlayer: false });
-      const breno = api.npc('breno', 7.3, 0.9, {
+      // ---------------- BRENO: espiando a coordenação pela janela de vidro ----------------
+      const breno = api.npc('breno', 2.6, -2.0, {
         rot: Math.PI, facePlayer: false, look: FARDA, label: 'Quem está espiando?',
         enabled: () => st.flags.sala && st.flags.banheiro,
         lines: [{ text: 'A água de salsicha está esculhambando Laura.' }],
@@ -1357,13 +1460,13 @@ export const MEMORIES = [
         }
       }
 
-      api.exit(-16.6, 2.4, { rotY: Math.PI / 2 });
+      api.exit(-7.75, -1.9, { rotY: Math.PI / 2, w: 1.6 });
 
       return {
-        bounds: { minX: -16.8, maxX: 16.8, minZ: -9.3, maxZ: 4.2 },
-        spawn: { x: -13, z: 2.4, rot: Math.PI / 2 },
+        bounds: { minX: -11.3, maxX: 11.3, minZ: -9.7, maxZ: 9.8 },
+        spawn: { x: -6.8, z: -1.9, rot: Math.PI / 2 },
         camOffset: new THREE.Vector3(0, 11, 11),
-        camClamp: { minX: -9, maxX: 9, minZ: -3, maxZ: 0.5 },
+        camClamp: { minX: -7, maxX: 7, minZ: -6, maxZ: 5 },
         background: 0xdfe8ee,
         onEnter: async () => { api.sfx.bell(); },
       };
