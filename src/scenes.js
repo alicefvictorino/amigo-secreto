@@ -5,6 +5,7 @@ import fotoMelhores from '../assets/melhores-grupo.jpg';
 import fotoVale from '../assets/vale-piquenique.jpg';
 import fotoAniversario from '../assets/aniversario-grupo.jpg';
 import fotoPlacaNala from '../assets/formatura-placa-nala.jpg';
+import fotoFormatura from '../assets/formatura-grupo.jpg';
 import { SECRET_NAME, SECRET_KEY } from './secret.js';
 
 // =====================================================================
@@ -1129,6 +1130,9 @@ export const MEMORIES = [
         const b = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.02, 10), mat(c)); b.rotation.x = Math.PI / 2; b.position.set(x, y, 0.2); nala.ch.parts.torso.add(b);
       });
       nala.facePlayer = false;
+
+      // easter egg: celular caído perto da coluna da esquerda com a foto em grupo da festa
+      photoClue(st, api, { x: -7.5, z: 2.0, rot: 0.7, photo: fotoFormatura, caption: 'Formatura 2026', thought: 'Todo mundo tão feliz... Queria lembrar quem eu sou.' });
 
       api.exit(X - 0.45, 5.6, { rotY: -Math.PI / 2 });
       st.flags.danceIdle = true;
