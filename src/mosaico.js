@@ -14,9 +14,7 @@ import f12 from '../assets/mosaico/12.jpg';
 import f13 from '../assets/mosaico/13.jpg';
 import f14 from '../assets/mosaico/14.jpg';
 import f15 from '../assets/mosaico/15.jpg';
-import f16 from '../assets/mosaico/16.jpg';
 import f17 from '../assets/mosaico/17.jpg';
-import f18 from '../assets/mosaico/18.jpg';
 
 // [foto, proporção largura/altura], na ordem em que aparecem
 const FOTOS = [
@@ -30,14 +28,12 @@ const FOTOS = [
   [f10, 0.7500],
   [f03, 1.3333],
   [f12, 1.3333],
-  [f18, 0.7500],
   [f08, 1.3333],
   [f11, 1.3333],
   [f05, 0.5625],
   [f15, 1.7225],
   [f02, 1.3333],
   [f17, 0.7500],
-  [f16, 1.3333],
 ].filter(([src]) => src);
 
 export const temMosaico = () => FOTOS.length > 0;
