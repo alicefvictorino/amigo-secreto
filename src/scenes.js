@@ -1523,18 +1523,67 @@ export const MEMORIES = [
       }
       st.updaters.push((dt) => clouds.forEach(c => { c.position.x += dt * 6; if (c.position.x > R + 10) c.position.x = L - 10; }));
 
-      // a Bahia lá embaixo (provisório: mar, orla e um farol)
+      // Salvador lá embaixo: na ponta, o Farol da Barra em cima do forte; a orla com coqueiros e prédios;
+      // mais ao fundo, na beira da baía, a Cidade Baixa, o Elevador Lacerda subindo a encosta até a Cidade Alta
+      // com os casarões coloridos do Pelourinho, o Mercado Modelo e o Forte de São Marcelo no mar
       const B = new THREE.Vector3(0, -70, -40);
       const bahia = new THREE.Group(); st.add(bahia); bahia.visible = false;
       const bahiaStart = st.root.children.length;
-      st.box(B.x, B.y - 1, B.z, 160, 1, 120, 0x1f78b4, { cast: false });
-      st.box(B.x + 20, B.y, B.z - 20, 80, 1.2, 60, 0xe8d8a8, { cast: false });
-      st.box(B.x + 26, B.y + 1, B.z - 26, 70, 0.6, 50, 0x6aa84f, { cast: false });
-      for (let i = 0; i < 26; i++) st.box(B.x + 6 + (i % 7) * 6, B.y + 1, B.z - 16 - Math.floor(i / 7) * 6, 3.5, 2 + (i * 7 % 9), 3.5, [0xf7f7f7, 0xf2d6a0, 0xe0a370, 0xc9d6df][i % 4], { cast: false });
-      st.box(B.x - 6, B.y, B.z - 6, 9, 2.2, 9, 0xd9c7a0, { cast: false });
-      st.box(B.x - 6, B.y + 2.2, B.z - 6, 2.4, 9, 2.4, 0xffffff, { cast: false });
-      st.box(B.x - 6, B.y + 6, B.z - 6, 2.5, 1.2, 2.5, 0x222222, { cast: false });
-      st.box(B.x - 6, B.y + 11.2, B.z - 6, 1.8, 1.4, 1.8, 0xfff2a0, { emissive: 0xffe680, ei: 1, cast: false });
+      const at = (x, y, z, w, h, d, c, o = {}) => st.box(B.x + x, B.y + y, B.z + z, w, h, d, c, { cast: false, ...o });
+      const cyl = (x, y, z, r, h, c, seg = 16, o = {}) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, seg), mat(c, o)); m.position.set(B.x + x, B.y + y + h / 2, B.z + z); st.add(m); return m; };
+      // mar (a baía à esquerda, o Atlântico na frente)
+      at(10, -1.2, -20, 200, 1, 160, 0x1f78b4);
+      at(-30, -1.15, -40, 40, 1, 80, 0x2a8bc4);
+      // terra firme e a ponta da Barra
+      at(28, -0.4, -40, 76, 0.6, 76, 0x7fae5a);
+      at(-7, -0.4, -3, 12, 0.6, 12, 0x8fb86a);
+      // orla da Barra: areia, calçadão e coqueiros
+      at(30, -0.2, -0.6, 64, 0.4, 3.0, 0xf0dca8);
+      at(30, 0, -2.6, 64, 0.2, 1.2, 0xd9d2c4);
+      const coqueiro = (x, z, h) => {
+        at(x, 0, z, 0.35, h, 0.35, 0x9b7b4f);
+        [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dz]) => { const f = at(x + dx * 0.7, h - 0.1, z + dz * 0.7, 1.4 * Math.abs(dx) + 0.35, 0.15, 1.4 * Math.abs(dz) + 0.35, 0x2f9e44); f.rotation.z = -dx * 0.25; f.rotation.x = dz * 0.25; });
+      };
+      for (let x = 2; x < 60; x += 3.2) coqueiro(x, -2.9 + (x % 2) * 0.3, 2.6 + (x % 3) * 0.4);
+      // prédios da Barra
+      for (let i = 0; i < 40; i++) {
+        const x = 3 + (i % 10) * 5.4 + (i % 3), z = -7 - Math.floor(i / 10) * 6.5;
+        at(x, 0, z, 3.4, 3 + ((i * 7) % 9), 3.4, [0xf7f7f2, 0xf2e3c4, 0xe7d3b0, 0xdfe6ea][i % 4]);
+      }
+      // Forte de Santo Antônio da Barra (muralha baixa em octógono) e o Farol da Barra
+      const fx = -7.5, fz = -1.5;
+      cyl(fx, 0, fz, 4.2, 1.8, 0xeadfc6, 8);
+      cyl(fx, 1.8, fz, 3.4, 0.05, 0xb9aa88, 8);
+      for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2 + Math.PI / 8; at(fx + Math.cos(a) * 4.0, 1.8, fz + Math.sin(a) * 4.0, 0.6, 0.4, 0.6, 0xeadfc6); }
+      cyl(fx, 1.8, fz, 1.0, 7.0, 0xffffff, 16);
+      cyl(fx, 6.0, fz, 1.03, 1.3, 0x1a1a1a, 16);
+      cyl(fx, 8.8, fz, 1.25, 0.25, 0x1a1a1a, 16);
+      cyl(fx, 9.05, fz, 0.75, 1.0, 0xfff2a0, 12, { emissive: 0xffe680, ei: 1.2 });
+      const cap = new THREE.Mesh(new THREE.ConeGeometry(0.9, 0.9, 12), mat(0x1a1a1a)); cap.position.set(B.x + fx, B.y + 10.5, B.z + fz); st.add(cap);
+      // Cidade Baixa na beira da baía e a encosta até a Cidade Alta
+      at(-6, 0, -46, 8, 0.4, 24, 0xcfc3a8);
+      at(4, 0, -46, 12, 6.2, 24, 0x6f8f4a);
+      for (let i = 0; i < 6; i++) at(-8 + (i % 2) * 3.5, 0.4, -36 - i * 3.4, 2.8, 1.6 + (i % 3) * 0.6, 2.8, [0xf2e3c4, 0xe9d6b0, 0xdfe6ea][i % 3]);
+      // Mercado Modelo
+      at(-7.2, 0.4, -50.5, 4.2, 2.2, 3.2, 0xe8c25a);
+      at(-7.2, 2.6, -50.5, 4.4, 0.25, 3.4, 0xb98a3a);
+      // Elevador Lacerda: torre art déco clara, com a passarela até a Cidade Alta
+      at(-3.2, 0.4, -46.5, 2.4, 8.4, 3.2, 0xf1e9d6);
+      at(-3.2, 8.8, -46.5, 2.6, 0.5, 3.4, 0xd9cdb0);
+      at(-0.6, 6.4, -46.5, 3.2, 1.2, 1.6, 0xf1e9d6);
+      for (let k = 0; k < 4; k++) at(-4.42, 1.2 + k * 1.8, -46.5, 0.05, 1.0, 2.2, 0x9fb7c8);
+      // Pelourinho: casarões coloridos e uma igreja de duas torres na Cidade Alta
+      const pelo = [0x3d7cc9, 0xf2c230, 0xe86a92, 0x4caf7a, 0xe8743b, 0x9b59b6, 0x5bc0de];
+      for (let i = 0; i < 18; i++) {
+        const x = 0.8 + (i % 6) * 1.9, z = -38 - Math.floor(i / 6) * 3.4;
+        at(x, 6.2, z, 1.7, 1.6 + (i % 2) * 0.5, 2.6, pelo[i % pelo.length]);
+        at(x, 7.8 + (i % 2) * 0.5, z, 1.8, 0.3, 2.7, 0xb5562f);
+      }
+      at(6, 6.2, -52, 4.5, 3.2, 3.4, 0xf4ecda);
+      [-1.6, 1.6].forEach(dx => { at(6 + dx, 9.4, -52, 1.2, 2.2, 1.2, 0xf4ecda); const t = new THREE.Mesh(new THREE.ConeGeometry(0.8, 1.2, 4), mat(0x7a4a2a)); t.position.set(B.x + 6 + dx, B.y + 12.2, B.z - 52); t.rotation.y = Math.PI / 4; st.add(t); });
+      // Forte de São Marcelo, redondo, no meio da água
+      cyl(-15, -0.6, -47, 2.6, 2.0, 0x8a7a66, 20);
+      cyl(-15, 1.4, -47, 1.6, 1.0, 0x9a8a74, 20);
       const bahiaLight = new THREE.DirectionalLight(0xffffff, 2); bahiaLight.position.set(B.x + 20, B.y + 40, B.z + 20); bahiaLight.target.position.copy(B); st.add(bahiaLight); st.add(bahiaLight.target);
       st.root.children.slice(bahiaStart).forEach(o => bahia.attach(o));
 
@@ -1545,7 +1594,10 @@ export const MEMORIES = [
         x: 2.8, z: -0.7, r: 1.6, label: 'Olhar pela janela', h: 2.4,
         onInteract: async () => {
           bahia.visible = true;
-          await api.camTo(new THREE.Vector3(B.x + 22, B.y + 26, B.z + 30), new THREE.Vector3(B.x - 2, B.y + 3, B.z - 8), 2200);
+          // primeiro o Farol da Barra, depois a câmera desliza até o Elevador Lacerda e o Pelourinho
+          await api.camTo(new THREE.Vector3(B.x + 10, B.y + 14, B.z + 18), new THREE.Vector3(B.x - 6, B.y + 4, B.z - 4), 2200);
+          await api.wait(900);
+          await api.camTo(new THREE.Vector3(B.x - 26, B.y + 13, B.z - 27), new THREE.Vector3(B.x - 1, B.y + 4, B.z - 47), 2800);
           await api.thought('Bahia.');
           await api.wait(600);
           bahia.visible = false;
