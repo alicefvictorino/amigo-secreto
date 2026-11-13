@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { mat, BOX } from './world.js';
+import { mat, BOX, textTexture } from './world.js';
 import { makeCat } from './chars.js';
 import fotoMelhores from '../assets/melhores-grupo.jpg';
 import fotoVale from '../assets/vale-piquenique.jpg';
@@ -1220,78 +1220,107 @@ export const MEMORIES = [
       const glass = (x, z, w, d) => st.box(x, 0.9, z, w, 1.7, d, 0xbfe3f0, { opacity: 0.28, cast: false });
       lights(st, { hemi: 1.6, sun: 1.1, shadow: 22 });
 
-      // pisos
-      st.floor(-11.6, -4.6, -10, -3, 0xf2f4f5, { checker: 0xe1e6e9, tile: 0.7 });   // banheiro
-      st.floor(-4.6, -1.8, -10, -3, 0xecebe6, { checker: 0xe0dfd9, tile: 1.0 });    // passagem
-      st.floor(-1.8, 7.4, -10, -3, 0xf0f0ee, { checker: 0xe4e4e1, tile: 1.0 });     // coordenação
-      st.floor(-8, 6, -3, -0.8, 0xecebe6, { checker: 0xe0dfd9, tile: 1.0 });        // corredor
-      st.floor(-4.75, -1.6, -0.8, 10.1, 0xecebe6, { checker: 0xe0dfd9, tile: 1.0 }); // corredor até a sala
-      st.floor(-1.6, 11.6, -0.8, 10.1, 0xf1f1ef, { checker: 0xe5e5e2, tile: 1.0 }); // sala
+      // pisos (corredores largos: o de cima tem 3,6 m e o que desce até a sala, 4,4 m)
+      st.floor(-12.4, -5.4, -11.4, -4.4, 0xf2f4f5, { checker: 0xe1e6e9, tile: 0.7 });  // banheiro
+      st.floor(-5.4, -1.2, -11.4, -4.4, 0xecebe6, { checker: 0xe0dfd9, tile: 1.0 });   // passagem
+      st.floor(-1.2, 8.0, -11.4, -4.4, 0xf0f0ee, { checker: 0xe4e4e1, tile: 1.0 });    // coordenação
+      st.floor(-8, 6.6, -4.4, -0.8, 0xecebe6, { checker: 0xe0dfd9, tile: 1.0 });       // corredor
+      st.floor(-6.0, -1.6, -0.8, 10.1, 0xecebe6, { checker: 0xe0dfd9, tile: 1.0 });    // corredor até a sala
+      st.floor(-1.6, 11.6, -0.8, 10.1, 0xf1f1ef, { checker: 0xe5e5e2, tile: 1.0 });    // sala
 
       // ---------------- BANHEIRO ----------------
-      wallX(-10, -11.6, -4.6); wallZ(-11.6, -10, -3);
+      wallX(-11.4, -12.4, -5.4); wallZ(-12.4, -11.4, -4.4);
       // parede de baixo: baixa, com janela de vidro do lado de fora
-      wallX(-3, -11.6, -4.6, 0.9);
-      glass(-9.8, -3, 2.4, 0.06);
-      // parede da direita com o portão de entrada embaixo
-      wallZ(-4.6, -10, -4.9);
-      st.solid(-4.75, -4.45, -3.6, -3.2); tiled(-4.6, -3.4, 0.3, 0.4, H);
-      // cabines na parede da esquerda (a do meio fechada)
-      const CAB = 0x9fbccc;
-      [-8.3, -6.6, -4.9].forEach(z => st.box(-10.8, 0, z, 1.6, 2.2, 0.08, CAB));
-      st.box(-10.8, 0, -10 + 0.1, 1.6, 2.2, 0.08, CAB);
-      [[-9.15, false], [-7.45, true], [-5.75, false]].forEach(([zc, closed]) => {
-        st.box(-11.25, 0, zc, 0.45, 0.45, 0.4, 0xffffff); st.box(-11.45, 0.45, zc, 0.12, 0.5, 0.4, 0xffffff);
-        const door = st.box(-10.0, 0.15, zc, 0.06, 1.95, 1.5, closed ? 0x5d8aa8 : CAB);
-        if (!closed) { door.rotation.y = 0.9; door.position.x += 0.45; door.position.z += 0.3; }
+      wallX(-4.4, -12.4, -5.4, 0.9);
+      glass(-10.6, -4.4, 2.4, 0.06);
+      // parede da direita com o portão de entrada embaixo; fica transparente quando o boneco está do lado de fora,
+      // para dar para ver as pias
+      const bathEast = [...wallZ(-5.4, -11.4, -6.3)];
+      st.solid(-5.55, -5.25, -5.0, -4.6); bathEast.push(...tiled(-5.4, -4.8, 0.3, 0.4, H));
+      fader(st, bathEast, () => api.player && api.player.root.position.x > -5.55 && api.player.root.position.z < -0.8);
+      // cabines na parede da esquerda (a do meio fechada, com o aviso vermelho de ocupado)
+      const CAB = 0x9fbccc, ALU = 0xc0c4c8;
+      [-11.35, -9.7, -8.0, -6.3].forEach(z => {
+        st.box(-11.6, 0.15, z, 1.6, 2.05, 0.05, CAB);                       // divisória, sem encostar no chão
+        st.box(-10.9, 0, z, 0.05, 0.15, 0.05, ALU, { cast: false });        // pezinho
+        st.box(-12.3, 0, z, 0.05, 0.15, 0.05, ALU, { cast: false });
+        st.box(-10.8, 0.15, z, 0.08, 2.05, 0.14, CAB);                      // coluna da frente
       });
-      st.solid(-11.6, -9.95, -10, -4.85);
+      st.box(-10.8, 2.2, -8.85, 0.06, 0.06, 5.2, ALU, { cast: false });     // trilho de alumínio em cima
+      [[-10.55, false], [-8.85, true], [-7.15, false]].forEach(([zc, closed]) => {
+        // vaso: louça branca, assento cinza, caixa acoplada e descarga
+        const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.15, 0.4, 14), mat(0xffffff)); bowl.position.set(-11.92, 0.2, zc); bowl.scale.z = 0.85; bowl.castShadow = true; st.add(bowl);
+        const seat = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.035, 6, 16), mat(0x8a8f94)); seat.rotation.x = Math.PI / 2; seat.position.set(-11.92, 0.42, zc); seat.scale.y = 0.85; st.add(seat);
+        st.box(-12.22, 0.3, zc, 0.16, 0.5, 0.42, 0xffffff);
+        st.box(-12.22, 0.8, zc, 0.18, 0.04, 0.44, 0xf2f2f2, { cast: false });
+        st.box(-12.22, 0.83, zc, 0.06, 0.02, 0.08, ALU, { cast: false });
+        // papel higiênico na divisória e lixeirinha no canto
+        st.box(-11.55, 0.78, zc - 0.78, 0.18, 0.04, 0.06, ALU, { cast: false });
+        const roll = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.1, 10), mat(0xffffff)); roll.rotation.z = Math.PI / 2; roll.position.set(-11.55, 0.72, zc - 0.74); st.add(roll);
+        const bin = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.09, 0.28, 10), mat(0x8a8f94)); bin.position.set(-11.15, 0.14, zc + 0.6); st.add(bin);
+        // porta na dobradiça: a do meio fechada, as outras entreabertas para dentro
+        const hinge = new THREE.Group(); hinge.position.set(-10.8, 0.2, zc + 0.73); st.add(hinge);
+        st.box(0, 0, -0.72, 0.05, 1.85, 1.42, CAB, { parent: hinge });
+        st.box(0.04, 0.95, -1.3, 0.04, 0.05, 0.14, ALU, { cast: false, parent: hinge });  // maçaneta
+        st.box(-0.04, 0.95, -1.3, 0.04, 0.05, 0.14, ALU, { cast: false, parent: hinge });
+        if (closed) st.box(0.035, 1.12, -1.3, 0.03, 0.07, 0.12, 0xd7262e, { cast: false, emissive: 0xd7262e, ei: 0.6, parent: hinge });
+        else hinge.rotation.y = -1.0;
+      });
+      st.solid(-12.4, -10.75, -11.4, -6.25);
       // bancada de granito cinza com 3 pias e espelho da pia até quase o teto
-      st.box(-5.05, 0, -7.5, 0.8, 0.9, 4.6, 0x7d8285, { solid: true });
-      [-9.0, -7.5, -6.0].forEach(z => {
-        st.box(-5.1, 0.88, z, 0.5, 0.05, 0.6, 0xffffff, { cast: false });
-        st.box(-4.8, 0.9, z, 0.08, 0.25, 0.08, 0xc0c0c0, { cast: false });
+      st.box(-5.85, 0, -8.9, 0.8, 0.9, 4.6, 0x7d8285, { solid: true });
+      [-10.4, -8.9, -7.4].forEach(z => {
+        st.box(-5.9, 0.88, z, 0.5, 0.05, 0.6, 0xffffff, { cast: false });
+        st.box(-5.6, 0.9, z, 0.08, 0.25, 0.08, 0xc0c0c0, { cast: false });
       });
-      st.mirror(-4.77, 2.05, -7.5, 4.4, 2.0, -Math.PI / 2);
-      st.sign('BANHEIRO', -4.43, 2.75, -3.0, 1.6, 0.4, { bg: '#2f6fae', fg: '#ffffff', rotY: Math.PI / 2 });
+      st.mirror(-5.57, 2.05, -8.9, 4.4, 2.0, -Math.PI / 2);
+      st.sign('BANHEIRO', -5.23, 2.75, -4.62, 1.6, 0.4, { bg: '#2f6fae', fg: '#ffffff', rotY: Math.PI / 2 });
 
       // ---------------- PASSAGEM ENTRE BANHEIRO E COORDENAÇÃO ----------------
-      wallX(-10, -4.6, -1.8);
+      wallX(-11.4, -5.4, -1.2);
+      // dois bebedouros de inox na parede de fora do banheiro, de frente para a coordenação
+      [-9.3, -8.2].forEach(z => {
+        st.box(-5.02, 0, z, 0.45, 0.95, 0.55, 0xb9bec4, { solid: true });
+        st.box(-5.0, 0.95, z, 0.47, 0.05, 0.57, 0x9aa0a6, { cast: false });
+        st.box(-4.98, 0.9, z, 0.3, 0.06, 0.36, 0x7d8388, { cast: false });
+        st.box(-5.12, 1.0, z, 0.05, 0.1, 0.05, 0xdfe3e6, { cast: false });
+        st.box(-4.8, 0.55, z, 0.02, 0.1, 0.12, 0x3a6fb0, { cast: false });
+      });
 
       // ---------------- COORDENAÇÃO ----------------
-      wallX(-10, -1.8, 7.4); wallZ(7.4, -10, -3);
+      wallX(-11.4, -1.2, 8.0); wallZ(8.0, -11.4, -4.4);
       // parede da esquerda: porta em cima e janela de vidro embaixo
-      wallZ(-1.8, -10, -8.6); wallZ(-1.8, -7.4, -6.7);
-      wallZ(-1.8, -6.7, -3, 0.9); glass(-1.8, -4.85, 0.06, 3.5);
+      wallZ(-1.2, -11.4, -10.0); wallZ(-1.2, -8.8, -8.1);
+      wallZ(-1.2, -8.1, -4.4, 0.9); glass(-1.2, -6.25, 0.06, 3.5);
       // parede de baixo: janela de vidro para o corredor
-      wallX(-3, -1.8, 7.4, 0.9); glass(2.3, -3, 5.6, 0.06);
-      st.sign('COORDENAÇÃO', -1.97, 2.75, -8.0, 2.0, 0.4, { bg: '#2f6fae', fg: '#ffffff', rotY: -Math.PI / 2 });
+      wallX(-4.4, -1.2, 8.0, 0.9); glass(2.9, -4.4, 5.6, 0.06);
+      st.sign('COORDENAÇÃO', -1.37, 2.75, -9.4, 2.0, 0.4, { bg: '#2f6fae', fg: '#ffffff', rotY: -Math.PI / 2 });
       // mesa comprida, duas cadeiras de um lado e a da coordenação do outro, armário cinza no canto
-      st.table(3.25, -5.6, 1.3, 3.8, 0xf0f0ee);
-      st.box(3.6, 0.85, -6.4, 0.55, 0.42, 0.06, 0x1a1a1a); st.box(3.6, 0.85, -6.36, 0.12, 0.1, 0.2, 0x1a1a1a);
-      st.box(3.3, 0.85, -6.4, 0.08, 0.02, 0.4, 0x222222, { cast: false });
-      st.box(3.5, 0.85, -7.1, 0.6, 0.32, 0.5, 0xd9d9d6);
+      st.table(3.85, -7.0, 1.3, 3.8, 0xf0f0ee);
+      st.box(4.2, 0.85, -7.8, 0.55, 0.42, 0.06, 0x1a1a1a); st.box(4.2, 0.85, -7.76, 0.12, 0.1, 0.2, 0x1a1a1a);
+      st.box(3.9, 0.85, -7.8, 0.08, 0.02, 0.4, 0x222222, { cast: false });
+      st.box(4.1, 0.85, -8.5, 0.6, 0.32, 0.5, 0xd9d9d6);
       // janela com cortina bege na parede da direita
-      st.box(7.22, 1.0, -5.2, 0.04, 1.6, 1.8, 0x9fb7c8, { cast: false });
-      st.box(7.16, 0.8, -4.55, 0.08, 2.0, 0.6, 0xe8d9b5, { cast: false });
-      [[-6.5], [-4.8]].forEach(([z]) => st.chair(2.0, z, Math.PI / 2, 0x333333));
-      st.chair(4.55, -5.9, -Math.PI / 2, 0x333333);
-      st.box(6.7, 0, -8.4, 1.1, 2.3, 3.0, 0xc9cdd1, { solid: true });
-      st.box(6.14, 0, -8.4, 0.02, 2.3, 0.03, 0x9aa0a6, { cast: false });
-      st.box(6.13, 1.1, -8.6, 0.03, 0.18, 0.04, 0x6a6f74, { cast: false }); st.box(6.13, 1.1, -8.2, 0.03, 0.18, 0.04, 0x6a6f74, { cast: false });
-      api.npc('titia', 4.55, -5.9, { sit: true, y: 0.1, rot: -Math.PI / 2, facePlayer: false, solid: false, look: { shirt: 0x1c2a4a } });
-      api.npc('mayara', 2.0, -6.5, { sit: true, y: 0.1, rot: Math.PI / 2, facePlayer: false, solid: false, look: { shirt: 0x1c2a4a }, ambient: 'Laura é perversa!', ambientR: 5 });
+      st.box(7.82, 1.0, -6.6, 0.04, 1.6, 1.8, 0x9fb7c8, { cast: false });
+      st.box(7.76, 0.8, -5.95, 0.08, 2.0, 0.6, 0xe8d9b5, { cast: false });
+      [[-7.9], [-6.2]].forEach(([z]) => st.chair(2.6, z, Math.PI / 2, 0x333333));
+      st.chair(5.15, -7.3, -Math.PI / 2, 0x333333);
+      st.box(7.3, 0, -9.8, 1.1, 2.3, 3.0, 0xc9cdd1, { solid: true });
+      st.box(6.74, 0, -9.8, 0.02, 2.3, 0.03, 0x9aa0a6, { cast: false });
+      st.box(6.73, 1.1, -10.0, 0.03, 0.18, 0.04, 0x6a6f74, { cast: false }); st.box(6.73, 1.1, -9.6, 0.03, 0.18, 0.04, 0x6a6f74, { cast: false });
+      api.npc('titia', 5.15, -7.3, { sit: true, y: 0.1, rot: -Math.PI / 2, facePlayer: false, solid: false });
+      api.npc('mayara', 2.6, -7.9, { sit: true, y: 0.1, rot: Math.PI / 2, facePlayer: false, solid: false, look: { shirt: 0x1c2a4a }, ambient: 'Laura é perversa!', ambientR: 5 });
 
       // ---------------- CORREDORES ----------------
-      wallZ(-8, -3, -0.8);              // ponta esquerda do corredor
-      wallZ(6, -3, -0.8);               // ponta direita
-      wallX(-0.8, -8, -4.75, 0.5);      // borda de baixo (lado de fora)
-      wallZ(-4.75, -0.8, 10.1);         // parede do corredor que desce até a sala
-      wallX(10.1, -4.75, -1.6, 0.5);
-      [-6.2, -3.2, 0.5, 4.0].forEach(x => pennants(x, -3.0, x, -0.8));
-      [1.5, 4.5, 7.5].forEach(z => pennants(-4.6, z, -1.75, z));
+      wallZ(-8, -4.4, -0.8);            // ponta esquerda do corredor
+      wallZ(6.6, -4.4, -0.8);           // ponta direita
+      wallX(-0.8, -8, -6.0, 0.5);       // borda de baixo (lado de fora)
+      wallZ(-6.0, -0.8, 10.1);          // parede do corredor que desce até a sala
+      wallX(10.1, -6.0, -1.6, 0.5);
+      [-6.2, -3.2, 0.5, 4.0].forEach(x => pennants(x, -4.4, x, -0.8));
+      [1.5, 4.5, 7.5].forEach(z => pennants(-5.85, z, -1.75, z));
       const cut = [0xf2c230, 0x3fa7d6, 0xe8743b, 0x7fc8a9, 0xd98fa6, 0x8e44ad];
-      for (let i = 0; i < 9; i++) st.box(-4.58, 1.95 + (i % 3) * 0.32, 0.4 + i * 1.05, 0.03, 0.22, 0.42, cut[i % cut.length], { cast: false });
+      for (let i = 0; i < 9; i++) st.box(-5.83, 1.95 + (i % 3) * 0.32, 0.4 + i * 1.05, 0.03, 0.22, 0.42, cut[i % cut.length], { cast: false });
 
       // ---------------- SALA DE AULA ----------------
       // parede de cima com pôsteres de trabalhos em cartolina (fica transparente quando o boneco está atrás dela)
@@ -1328,8 +1357,12 @@ export const MEMORIES = [
       wallX(10.1, -1.6, 11.6, 0.5);
       const inner = new THREE.Mesh(new THREE.PlaneGeometry(13.2, 2.7), new THREE.MeshLambertMaterial({ color: WALL }));
       inner.position.set(5.0, 1.85, 9.94); inner.rotation.y = Math.PI; st.add(inner); st.disposables.push(inner.geometry, inner.material);
-      st.box(2.0, 1.3, 9.9, 5.8, 1.75, 0.05, 0x9aa3ab, { cast: false });
-      st.sign('APRESENTAÇÕES DO\nSARAU EM BREVE', 2.0, 2.18, 9.86, 5.5, 1.55, { bg: '#fbfbfb', fg: '#1f4fa0', rotY: Math.PI, weight: 600 });
+      // quadro branco (planos virados para dentro da sala, para não aparecerem por trás) e a faixa do sarau
+      const northPlane = (cx, cy, w, h, color, z) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshLambertMaterial({ color })); m.position.set(cx, cy, z); m.rotation.y = Math.PI; st.add(m); st.disposables.push(m.geometry, m.material); return m; };
+      northPlane(2.0, 2.15, 5.8, 1.75, 0x9aa3ab, 9.9);
+      northPlane(2.0, 2.15, 5.55, 1.55, 0xfbfbfb, 9.88);
+      [[0.4, 1.75, 1.6], [2.6, 1.85, 1.2], [3.6, 1.6, 0.9]].forEach(([x, y, w]) => northPlane(x, y, w, 0.05, 0x1f4fa0, 9.87));
+      st.sign('APRESENTAÇÕES DO SARAU', 2.0, 2.6, 9.85, 6.3, 0.8, { bg: '#c8202f', fg: '#ffffff', border: '#f2c230', rotY: Math.PI, weight: 700 });
       const abc = (() => {
         const c = document.createElement('canvas'); c.width = 1024; c.height = 160;
         const g = c.getContext('2d'); g.fillStyle = '#eae3d2'; g.fillRect(0, 0, 1024, 160);
@@ -1346,11 +1379,12 @@ export const MEMORIES = [
       const abcM = new THREE.Mesh(new THREE.PlaneGeometry(5.6, 0.86), new THREE.MeshBasicMaterial({ map: abc, toneMapped: false }));
       abcM.position.set(2.0, 0.92, 9.9); abcM.rotation.y = Math.PI; st.add(abcM); st.disposables.push(abcM.geometry, abcM.material);
       // mesa e cadeira do professor entre dois armários cinza
-      st.box(7.0, 0, 8.9, 1.2, 2.2, 2.1, 0xc9cdd1, { solid: true });
+      // mesa, cadeira e armário do professor (pela planta: mesa, cadeira ao lado e armário no canto)
+      st.table(7.0, 8.9, 1.1, 2.0, 0xf0f0ee);
+      st.box(7.1, 0.85, 8.4, 0.4, 0.06, 0.3, 0x2b2b2b, { cast: false });
+      st.chair(8.15, 8.9, -Math.PI / 2, 0x2b2b2b);
       st.box(10.2, 0, 8.9, 1.1, 2.2, 2.3, 0xc9cdd1, { solid: true });
-      st.box(6.38, 0, 8.9, 0.02, 2.2, 0.03, 0x9aa0a6, { cast: false }); st.box(9.63, 0, 8.9, 0.02, 2.2, 0.03, 0x9aa0a6, { cast: false });
-      st.table(8.6, 8.5, 1.4, 0.8, 0xf0f0ee);
-      st.chair(8.6, 9.3, Math.PI, 0x2f6fae);
+      st.box(9.63, 0, 8.9, 0.02, 2.2, 0.03, 0x9aa0a6, { cast: false });
       // umas 7 fileiras de 6 carteiras azuis, viradas para o quadro
       const seats = [];
       for (let r = 0; r < 7; r++) for (let c = 0; c < 6; c++) {
@@ -1364,7 +1398,22 @@ export const MEMORIES = [
         seats.push([x, z - 0.22]);
       }
       const at = (r, c) => seats[r * 6 + c];
-      const classmates = [['hanna', 5, 1], ['analuz', 5, 3], ['flora', 4, 0], ['dudao', 4, 4], ['nala', 3, 2], ['lisis', 3, 5], ['chinelo', 2, 1], ['alice', 2, 3]];
+      const classmates = [['hanna', 5, 1], ['flora', 4, 0], ['nala', 3, 2], ['lisis', 3, 5], ['alice', 2, 3]];
+      // sarau: na frente do quadro, de farda, cada um levantando a sua plaquinha (texto dos dois lados)
+      const placa = (ch, text) => {
+        const tex = textTexture(text, { w: 512, h: 220, bg: '#ffffff', fg: '#1a1a1a', border: '#1c2a4a', weight: 700 });
+        const m = new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }); st.disposables.push(tex, m);
+        const g = new THREE.Group(); g.position.set(0, 2.5, 0.05); ch.root.add(g);
+        const board = new THREE.Mesh(BOX, mat(0xffffff)); board.scale.set(1.0, 0.44, 0.03); g.add(board);
+        [0, Math.PI].forEach(r => { const pl = new THREE.Mesh(new THREE.PlaneGeometry(0.96, 0.42), m); pl.rotation.y = r; pl.position.z = r ? -0.017 : 0.017; g.add(pl); });
+        ch.holdArms = true; ch.parts.armL.rotation.set(-2.95, 0, 0.12); ch.parts.armR.rotation.set(-2.95, 0, -0.12);
+        return g;
+      };
+      const SPOT = { x: 0.2, z: 7.45 };
+      [['chinelo', 1.6, 'INDÍGENA'], ['analuz', 3.0, 'LGBT'], ['dudao', 4.4, 'PCD']].forEach(([k, x, txt]) => {
+        const n = api.npc(k, x, SPOT.z, { rot: Math.PI, facePlayer: false, look: FARDA });
+        placa(n.ch, txt);
+      });
       classmates.forEach(([k, r, c]) => { const [x, z] = at(r, c); api.npc(k, x, z, { sit: true, y: 0.02, rot: 0, facePlayer: false, look: FARDA, solid: false }); });
       const skins = [0x8d5524, 0xc68642, 0xe0ac69, 0xf1c27d, 0x6b3e26, 0xd9a77c];
       [[6, 0], [6, 4], [5, 5], [4, 2], [3, 0], [1, 2], [1, 4], [0, 1]].forEach(([r, c], i) => {
@@ -1379,7 +1428,13 @@ export const MEMORIES = [
           salaDone = true; st.flags.sala = true;
           api.state.cutscene++;
           (async () => {
-            await api.camTo(new THREE.Vector3(3.2, 3.4, 3.2), new THREE.Vector3(2.0, 1.6, 9.9), 1000);
+            // o boneco vai para o lugar dele na fila do sarau, com a plaquinha dele
+            const pl = api.player;
+            pl.root.position.set(SPOT.x, 0, SPOT.z); pl.root.rotation.y = Math.PI;
+            placa(pl, 'NEGRO');
+            // a câmera mostra, do lado da turma, a fila de frente e a faixa no quadro
+            await api.camTo(new THREE.Vector3(2.3, 3.9, 0.2), new THREE.Vector3(2.3, 1.9, 9.0), 1300);
+            await api.wait(700);
             await api.thought('Minha sala.');
             api.camFollow();
             api.state.cutscene--;
@@ -1389,8 +1444,8 @@ export const MEMORIES = [
       });
 
       // ---------------- BANHEIRO: Yasmim e a cabine fechada ----------------
-      const stallAnchor = new THREE.Vector3(-10.8, 2.3, -7.45);
-      const yasmim = api.npc('yasmim', -8.8, -7.0, { rot: -Math.PI / 2, look: FARDA });
+      const stallAnchor = new THREE.Vector3(-11.6, 2.3, -8.85);
+      const yasmim = api.npc('yasmim', -9.6, -8.4, { rot: -Math.PI / 2, look: FARDA });
       api.interact({
         pos: () => yasmim.root.position, r: 2.4, label: 'Falar com Yasmim',
         onInteract: async () => {
@@ -1402,10 +1457,10 @@ export const MEMORIES = [
           checkBreno();
         },
       });
-      api.interact({ x: -5.9, z: -7.5, r: 1.5, label: 'Olhar no espelho', once: false, onInteract: () => api.thought('Ainda sem rosto.') });
+      api.interact({ x: -6.7, z: -8.9, r: 1.5, label: 'Olhar no espelho', once: false, onInteract: () => api.thought('Ainda sem rosto.') });
 
       // ---------------- BRENO: espiando a coordenação pela janela de vidro ----------------
-      const breno = api.npc('breno', 2.6, -2.0, {
+      const breno = api.npc('breno', 3.2, -3.4, {
         rot: Math.PI, facePlayer: false, look: FARDA, label: 'Quem está espiando?',
         enabled: () => st.flags.sala && st.flags.banheiro,
         lines: [{ text: 'A água de salsicha está esculhambando Laura.' }],
@@ -1426,13 +1481,13 @@ export const MEMORIES = [
         }
       }
 
-      api.exit(-7.75, -1.9, { rotY: Math.PI / 2, w: 1.6 });
+      api.exit(-7.75, -2.6, { rotY: Math.PI / 2, w: 1.8 });
 
       return {
-        bounds: { minX: -11.3, maxX: 11.3, minZ: -9.7, maxZ: 9.8 },
-        spawn: { x: -6.8, z: -1.9, rot: Math.PI / 2 },
+        bounds: { minX: -12.1, maxX: 11.3, minZ: -11.1, maxZ: 9.8 },
+        spawn: { x: -6.8, z: -2.6, rot: Math.PI / 2 },
         camOffset: new THREE.Vector3(0, 11, 11),
-        camClamp: { minX: -7, maxX: 7, minZ: -6, maxZ: 5 },
+        camClamp: { minX: -8, maxX: 7, minZ: -7.5, maxZ: 5 },
         background: 0xdfe8ee,
         onEnter: async () => { api.sfx.bell(); },
       };

@@ -29,8 +29,8 @@ export const LOOKS = {
   yasmim:  { skin: 0xe0b48e, hair: 0x1a120e, hairStyle: 'long', shirt: 0xc0392b, pants: 0x1c2833 },
 
   // figurantes com nome (não estão no amigo secreto)
-  titia:   { skin: 0xe0b08a, hair: 0x9a9a9a, hairStyle: 'bun', shirt: 0xffffff, pants: 0x34495e },
-  mayara:  { skin: 0xd9a77c, hair: 0x3a2214, hairStyle: 'long', shirt: 0xfafafa, pants: 0x1f3a5f },
+  titia:   { skin: 0xb07850, hair: 0x2e1c12, hairStyle: 'bob', streaks: 0xc89a5a, shirt: 0x9cc4e4, collar: 0xb3d3ee, pants: 0x1c2a4a, extras: ['glasses'] },
+  mayara:  { skin: 0xd9a77c, hair: 0xf2efe8, hair2: 0xe0784a, hairStyle: 'long', shirt: 0xfafafa, pants: 0x1f3a5f },
   joao:    { skin: 0xe2b48c, hair: 0x2b1a10, hairStyle: 'short', shirt: 0x95a5a6, pants: 0x2c3e50 },
   silvana: { skin: 0xd8a47f, hair: 0x5a3010, hairStyle: 'short', shirt: 0xff7aa2, pants: 0x4a4a4a },
   clarice: { skin: 0xeec4a0, hair: 0x1a120e, hairStyle: 'long', shirt: 0x5fb8a6, pants: 0x3d5a8a, shoes: 0xf2f2f2 },
@@ -137,11 +137,19 @@ function addExtra(name, ch) {
   const { head, torso, armR, armL } = ch.parts;
   const g = new THREE.Group();
   switch (name) {
-    case 'glasses':
-      part(0.5, 0.06, 0.04, 0x222222, 0, 0.06, 0.32, head);
-      part(0.16, 0.12, 0.03, 0x88c0ff, -0.13, 0.05, 0.32, head, { opacity: 0.6 });
-      part(0.16, 0.12, 0.03, 0x88c0ff, 0.13, 0.05, 0.32, head, { opacity: 0.6 });
+    case 'glasses': {
+      // armação preta fina, só a frente (sem hastes grossas)
+      const fc = ch.look.glassesColor ?? 0x111111;
+      [-0.13, 0.13].forEach(x => {
+        part(0.19, 0.025, 0.025, fc, x, 0.115, 0.315, head);
+        part(0.19, 0.025, 0.025, fc, x, -0.005, 0.315, head);
+        part(0.025, 0.14, 0.025, fc, x - 0.085, 0.055, 0.315, head);
+        part(0.025, 0.14, 0.025, fc, x + 0.085, 0.055, 0.315, head);
+        part(0.15, 0.1, 0.01, 0xd8ecff, x, 0.055, 0.312, head, { opacity: 0.35 });
+      });
+      part(0.08, 0.025, 0.025, fc, 0, 0.09, 0.315, head);
       break;
+    }
     case 'santahat': {
       part(0.68, 0.13, 0.68, 0xffffff, 0, 0.33, 0, head);
       const top = part(0.52, 0.34, 0.52, 0xd7262e, 0.04, 0.54, -0.02, head); top.rotation.z = -0.25;
@@ -385,6 +393,19 @@ export function makeCharacter(lookKey, overrides = {}) {
   parts.face = face;
 
   parts.hair = buildHair(look.hairStyle, look.hair, head);
+  if (look.hair2 !== undefined) {
+    // metade direita do cabelo em outra cor
+    [...parts.hair.children].forEach(m => {
+      if (!m.isMesh) return;
+      if (m.position.x > 0.02) m.material = mat(look.hair2);
+      else if (Math.abs(m.position.x) <= 0.02) {
+        const h2 = new THREE.Mesh(BOX, mat(look.hair2));
+        h2.scale.set(m.scale.x / 2 + 0.005, m.scale.y + 0.01, m.scale.z + 0.01);
+        h2.position.set(m.position.x + m.scale.x / 4, m.position.y, m.position.z);
+        h2.castShadow = true; parts.hair.add(h2);
+      }
+    });
+  }
   if (look.streaks !== undefined) {
     part(0.12, 0.5, 0.06, look.streaks, -0.3, 0.12, 0.31, head);
     part(0.12, 0.5, 0.06, look.streaks, 0.3, 0.12, 0.31, head);
