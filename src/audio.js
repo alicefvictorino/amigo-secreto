@@ -90,6 +90,8 @@ export const sfx = {
     o.start(t); lfo.start(t); o.stop(t + 2.5); lfo.stop(t + 2.5);
   },
   splash() { noise(0.5, { vol: 0.18, freq: 1800, q: 0.4, filter: 'highpass' }); noise(0.35, { vol: 0.1, freq: 500, q: 0.7, when: 0.05 }); },
+  bump() { noise(0.12, { vol: 0.3, freq: 220, q: 1 }); },
+  splat() { noise(0.3, { vol: 0.35, freq: 140, q: 0.8 }); noise(0.25, { vol: 0.14, freq: 1200, q: 0.5, when: 0.02 }); },
   knock() { [0, 0.18, 0.36].forEach(w => noise(0.08, { vol: 0.25, freq: 250, q: 1, when: w })); },
   reveal() {
     [523, 659, 784, 1046, 1318].forEach((f, i) => tone(f, 1.6, { type: 'triangle', vol: 0.12, when: i * 0.14 }));

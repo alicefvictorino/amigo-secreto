@@ -3,6 +3,7 @@ import { mat, BOX } from './world.js';
 import { makeCat } from './chars.js';
 import fotoMelhores from '../assets/melhores-grupo.jpg';
 import fotoVale from '../assets/vale-piquenique.jpg';
+import fotoAniversario from '../assets/aniversario-grupo.jpg';
 import { SECRET_NAME, SECRET_KEY } from './secret.js';
 
 // =====================================================================
@@ -77,6 +78,7 @@ function wander(st, n, pts, { speed = 1.1, pause = [1.2, 3.2] } = {}) {
   const p = n.root.position;
   const rest = () => pause[0] + Math.random() * (pause[1] - pause[0]);
   st.updaters.push((dt) => {
+    if (st.engine && st.engine.state.cutscene) return;
     const pl = st.engine && st.engine.player ? st.engine.player.root.position : null;
     if (pl && Math.hypot(pl.x - p.x, pl.z - p.z) < 1.7) { n.moving = false; return; }
     if (wait > 0) { wait -= dt; n.moving = false; return; }
@@ -711,39 +713,48 @@ export const MEMORIES = [
       st.box(0, 2.72, ZN + 0.36, 1.5, 0.38, 0.3, 0xffffff);
       st.box(0, 2.76, ZN + 0.52, 1.3, 0.04, 0.02, 0x9a9a9a, { cast: false });
 
-      // o bolo despedaçado: parte de baixo sem um pedaço, andar de cima escorregando, velas de "19"
+      // o bolo começa inteiro; na abertura Clarice esbarra na mesa, um pedaço cai no chão e o andar de cima escorrega
       const CH = 0x5a3420, CR = 0xfff3e6, PK = 0xff6fa8, top = 0.85;
       const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.75, 0.03, 20), mat(0xffffff)); plate.position.set(-0.1, top + 0.015, -3.1 + dz); st.add(plate);
       [[-0.5, -3.35], [-0.08, -3.35], [0.34, -3.35], [-0.5, -2.95], [-0.08, -2.95]].forEach(([x, z]) => {
         st.box(x, top + 0.03, z + dz, 0.42, 0.36, 0.4, CH);
         st.box(x, top + 0.39, z + dz, 0.42, 0.06, 0.4, CR);
       });
-      st.box(0.36, top + 0.03, -2.92 + dz, 0.3, 0.16, 0.26, CH); // restinho do pedaço que caiu
-      st.box(-0.29, top + 0.12, -2.73 + dz, 0.2, 0.22, 0.04, CR, { cast: false }); // cobertura escorrendo
-      st.box(0.12, top + 0.2, -2.73 + dz, 0.12, 0.16, 0.04, CR, { cast: false });
-      const tier = st.box(0.05, top + 0.45, -3.2 + dz, 0.7, 0.28, 0.5, CH);
-      tier.rotation.z = -0.32; tier.position.x += 0.15;
-      const tierTop = st.box(0.05, top + 0.73, -3.2 + dz, 0.7, 0.05, 0.5, CR); tierTop.rotation.z = -0.32; tierTop.position.x += 0.06; tierTop.position.y -= 0.03;
-      [[-0.45, -3.42], [-0.2, -3.42], [-0.45, -3.0]].forEach(([x, z]) => st.box(x, top + 0.45, z + dz, 0.08, 0.08, 0.08, PK, { cast: false }));
-      // velas de número "19"
+      // pedaço da frente, que vai cair
+      const piece = new THREE.Group(); piece.position.set(0.34, top + 0.03, -2.95 + dz); st.add(piece);
+      st.box(0, 0, 0, 0.42, 0.36, 0.4, CH, { parent: piece });
+      st.box(0, 0.36, 0, 0.42, 0.06, 0.4, CR, { parent: piece });
+      // o que fica na mesa depois do esbarrão
+      const leftovers = new THREE.Group(); leftovers.visible = false; st.add(leftovers);
+      st.box(0.36, top + 0.03, -2.92 + dz, 0.3, 0.16, 0.26, CH, { parent: leftovers });
+      st.box(-0.29, top + 0.12, -2.73 + dz, 0.2, 0.22, 0.04, CR, { cast: false, parent: leftovers });
+      st.box(0.12, top + 0.2, -2.73 + dz, 0.12, 0.16, 0.04, CR, { cast: false, parent: leftovers });
+      // andar de cima (em pé no começo, escorrega depois)
+      const tierG = new THREE.Group(); tierG.position.set(-0.08, top + 0.45, -3.2 + dz); st.add(tierG);
+      st.box(0, 0, 0, 0.7, 0.28, 0.5, CH, { parent: tierG });
+      st.box(0, 0.28, 0, 0.7, 0.05, 0.5, CR, { parent: tierG });
+      [[-0.2, 0.1], [0.05, -0.12], [0.22, 0.12]].forEach(([x, z]) => st.box(x, 0.33, z, 0.08, 0.08, 0.08, PK, { cast: false, parent: tierG }));
+      [[-0.45, -3.42], [-0.2, -3.42], [-0.6, -3.15]].forEach(([x, z]) => st.box(x, top + 0.45, z + dz, 0.08, 0.08, 0.08, PK, { cast: false }));
+      // velas de número "19", na frente do bolo
       const DIG = { '1': ['.X.', 'XX.', '.X.', '.X.', 'XXX'], '9': ['XXX', 'X.X', 'XXX', '..X', 'XXX'] };
       const flames = [];
       const V = 0.08;
       [['1', -0.66], ['9', -0.34]].forEach(([d, x0]) => {
-        DIG[d].forEach((row, r) => [...row].forEach((ch, c) => { if (ch === 'X') st.box(x0 + c * V, top + 0.45 + (4 - r) * V, -3.05 + dz, V, V, 0.06, 0xf2c230, { cast: false, emissive: 0x6a4a00, ei: 0.4 }); }));
-        flames.push(st.box(x0 + V, top + 0.45 + 5 * V + 0.02, -3.05 + dz, 0.06, 0.1, 0.06, 0xffb02e, { emissive: 0xff9a1e, ei: 2, cast: false }));
+        DIG[d].forEach((row, r) => [...row].forEach((ch, c) => { if (ch === 'X') st.box(x0 + c * V, top + 0.45 + (4 - r) * V, -2.86 + dz, V, V, 0.06, 0xf2c230, { cast: false, emissive: 0x6a4a00, ei: 0.4 }); }));
+        flames.push(st.box(x0 + V, top + 0.45 + 5 * V + 0.02, -2.86 + dz, 0.06, 0.1, 0.06, 0xffb02e, { emissive: 0xff9a1e, ei: 2, cast: false }));
       });
-      const candleLight = point(st, -0.4, top + 1.1, -3.0 + dz, 0xffa64d, 2, 4);
+      const candleLight = point(st, -0.4, top + 1.1, -2.8 + dz, 0xffa64d, 2, 4);
       st.updaters.push((dt, t) => { flames.forEach((f, i) => { f.scale.y = 0.1 * (1 + Math.sin(t * 17 + i) * 0.25); }); candleLight.intensity = 1.8 + Math.sin(t * 13) * 0.4; });
       // docinhos numa bandeja e copos nas pontas da mesa
       st.box(-1.35, top, TZ, 0.7, 0.03, 0.5, 0xf4f4f4, { cast: false });
       for (let i = 0; i < 8; i++) st.box(-1.6 + (i % 4) * 0.16, top + 0.03, TZ - 0.1 + Math.floor(i / 4) * 0.2, 0.1, 0.09, 0.1, i % 3 ? 0x3a2216 : 0xf7e7c6, { cast: false });
       [[1.2, -0.2], [1.45, -0.05], [1.3, 0.2], [1.6, 0.25]].forEach(([x, z], i) => st.box(x, top, TZ + z, 0.11, 0.17, 0.11, i % 2 ? 0xd7262e : 0xff8fc7, { cast: false }));
-      // pedaço caído no chão, na frente da mesa, com cobertura espalhada e farelos
-      const chunk1 = st.box(0.75, 0, -1.25, 0.42, 0.34, 0.38, CH); chunk1.rotation.set(0.25, 0.6, 0.35);
-      const chunk2 = st.box(1.15, 0, -0.95, 0.3, 0.22, 0.26, CH); chunk2.rotation.set(-0.3, 0.2, 0.5);
-      st.box(0.9, 0, -1.1, 0.9, 0.02, 0.7, CR, { cast: false });
-      for (let i = 0; i < 14; i++) st.box(0.3 + ((i * 0.37) % 1) * 1.3, 0, -1.6 + ((i * 0.61) % 1) * 1.0, 0.07, 0.05, 0.07, i % 3 ? CH : PK, { cast: false });
+      // bagunça no chão (aparece quando o pedaço cai)
+      const mess = new THREE.Group(); mess.visible = false; st.add(mess);
+      const chunk1 = st.box(0.75, 0, -1.25, 0.42, 0.34, 0.38, CH, { parent: mess }); chunk1.rotation.set(0.25, 0.6, 0.35);
+      const chunk2 = st.box(1.15, 0, -0.95, 0.3, 0.22, 0.26, CH, { parent: mess }); chunk2.rotation.set(-0.3, 0.2, 0.5);
+      st.box(0.9, 0, -1.1, 0.9, 0.02, 0.7, CR, { cast: false, parent: mess });
+      for (let i = 0; i < 14; i++) st.box(0.3 + ((i * 0.37) % 1) * 1.3, 0, -1.6 + ((i * 0.61) % 1) * 1.0, 0.07, 0.05, 0.07, i % 3 ? CH : PK, { cast: false, parent: mess });
 
       // painel "FLORA FAZ 19" num cavalete, com balões
       st.box(-3.1, 0, -3.0, 0.08, 1.0, 0.08, 0x6b4a2b);
@@ -803,18 +814,18 @@ export const MEMORIES = [
         api.npc('hanna', -3.0, -0.6, { look: { shirt: 0xff8fc7, skirt: 0xff8fc7, skirtLen: 'short', sleeveless: true, wingColor: 0xff8fc7 }, extras: ['wings'], ambientR: 2.2, ambient: 'Clarice matou o bolo!' }),
         api.npc('analuz', 3.4, -1.0, { look: { shirt: 0xa3161f, skirt: 0xa3161f, skirtLen: 'short', strapless: true, sleeveless: true, socks: 0xf5f5f5, shoes: 0xc0392b, headbandColor: 0xc0182a }, extras: ['headband', 'bloodmarks'], ambientR: 2.2, ambient: 'Clarice matou o bolo!' }),
         api.npc('nanda', -1.9, 0.4, { dance: true, look: { shirt: 0xf8f6f0, pants: 0xf8f6f0, sleeveless: true, streaks: 0xe8d27a, wingColor: 0xffffff }, extras: ['wings'], ambientR: 2.2, ambient: 'Clarice matou o bolo!' }),
-        api.npc('yasmim', 1.2, 0.2, { look: { bikini: 0xff7eb6, shorts: true, pants: 0x5b7fb5, hairStyle: 'braids', bandanaColor: 0xff5fa2 }, extras: ['bandana'], ambientR: 2.2, ambient: 'CLARICE MATOU O BOLO!' }),
+        api.npc('yasmim', 2.5, 0.5, { look: { bikini: 0xff7eb6, shorts: true, pants: 0x5b7fb5, hairStyle: 'braids', bandanaColor: 0xff5fa2 }, extras: ['bandana'], ambientR: 2.2, ambient: 'CLARICE MATOU O BOLO!' }),
       ];
       const alice = api.npc('alice', -3.7, 0.7, { rot: 0.45, facePlayer: false, look: { shirt: 0x151515, pants: 0x151515, sleeveless: true, kimono: 0xf4c542 } });
       // Chinelo: blazer preto, blusa branca, short preto, meia arrastão e argolas, como na foto em grupo
       const chinelo = api.npc('chinelo', -3.8, 2.3, { rot: 0.35, facePlayer: false, look: { shirt: 0xf8f6f0, jacket: 0x161616, pants: 0x161616, shorts: true, fishnet: true, shoes: 0x161616 }, extras: ['hoops'] });
-      const clarice = api.npc('clarice', 1.7, -0.8, { ambient: 'Socorro!', ambientStyle: 'shout-sm' });
+      const clarice = api.npc('clarice', 3.0, -0.2, { ambient: 'Socorro!', ambientStyle: 'shout-sm' });
 
       // ninguém fica parado: Clarice anda aflita perto do bolo, o pessoal circula, Nanda dança,
       // Hanna flutua e Alice e Chinelo trocam de pose na cortina
       wander(st, clarice, [[2.4, -1.0], [2.2, -0.4], [1.7, -0.8]], { speed: 1.6, pause: [0.4, 1.2] });
       wander(st, coro[1], [[4.2, -0.4], [3.9, 0.4], [3.4, -1.0]]);
-      wander(st, coro[3], [[0.6, 0.7], [1.3, 0.9], [1.2, 0.2]]);
+      wander(st, coro[3], [[1.4, 0.9], [0.6, 0.7], [2.5, 0.5]]);
       wander(st, coro[0], [[-2.4, -1.2], [-3.0, -0.6]], { speed: 0.8 });
       st.updaters.push((dt, t) => { coro[0].root.position.y = 0.1 + Math.sin(t * 2.2) * 0.08; });
       poser(st, alice, [{ rot: 0.45, rx: -2.8, rz: 0.2 }, { rot: 1.0, lz: -0.7, rz: 0.7 }, { rot: 0.1, rx: -1.4, lx: -1.4 }]);
@@ -838,6 +849,8 @@ export const MEMORIES = [
         onInteract: async () => { await api.eliminate('flora'); await api.complete('Não sou Flora. Mas lembro desse bolo.'); },
       });
       wander(st, flora, [[-1.5, -3.2], [-1.0, -3.2]], { speed: 0.5, pause: [2, 4] });
+      // easter egg: celular caído perto da cortina com a foto em grupo da festa
+      photoClue(st, api, { x: -2.4, z: 3.0, rot: 0.4, photo: fotoAniversario, caption: 'Aniversário de Flora 2021', thought: 'Que festa... Queria lembrar quem eu sou.' });
       api.exit(X - 0.45, 2.9, { rotY: -Math.PI / 2, w: 1.4 });
 
       return {
@@ -848,6 +861,34 @@ export const MEMORIES = [
         camClamp: { minX: -1.2, maxX: 1.2, minZ: -0.3, maxZ: 0.3 },
         background: 0x1a1428,
         music: 'festa',
+        onEnter: async () => {
+          const { tween, wait, sfx } = api;
+          await api.camTo(new THREE.Vector3(0.6, 7.2, 2.3), new THREE.Vector3(0.6, 0.9, -2.3), 900);
+          // Clarice vai até a mesa e esbarra
+          await api.walkNpc(clarice, 1.75, -1.2, 2.4);
+          clarice.root.rotation.y = clarice.baseRot = Math.PI + 0.3;
+          await tween(clarice.root.position, { z: -1.32 }, 120);
+          sfx.bump();
+          tween(clarice.root.position, { z: -1.2 }, 200);
+          // o bolo balança, o andar de cima escorrega e o pedaço da frente cai
+          tween(tierG.rotation, { z: -0.32 }, 450);
+          tween(tierG.position, { x: 0.15, y: top + 0.42 }, 450);
+          await tween(piece.position, { z: piece.position.z + 0.45 }, 280);
+          await tween(piece.rotation, { x: 0.9 }, 180);
+          tween(piece.rotation, { x: 2.2, y: 0.6, z: 0.35 }, 380);
+          await tween(piece.position, { x: 0.75, y: 0.05, z: -1.25 }, 380, 'in');
+          piece.visible = false; mess.visible = true; leftovers.visible = true;
+          sfx.splat();
+          await wait(350);
+          const kk = 'KKKKKKKKKKKKKKK';
+          await api.say([
+            { who: coro[0], text: kk, sim: [coro[1], coro[2], coro[3], alice, chinelo].map(w => ({ who: w, text: kk })) },
+            { who: flora, text: 'PUTA QUE PARIUUU', style: 'shout', sfx: 'scream' },
+            { who: clarice, text: 'Socorro!', style: 'shout' },
+          ]);
+          if (clarice.collider) clarice.collider.on = true;
+          api.camFollow();
+        },
       };
     },
   },

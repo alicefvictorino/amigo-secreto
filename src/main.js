@@ -303,7 +303,7 @@ async function eliminate(key) {
 // ------------------------------------------------------------------
 // Tweens e câmera
 // ------------------------------------------------------------------
-const ease = { inOut: t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2, out: t => 1 - Math.pow(1 - t, 3), lin: t => t };
+const ease = { inOut: t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2, out: t => 1 - Math.pow(1 - t, 3), in: t => t * t, lin: t => t };
 function tween(obj, to, ms, e = 'inOut') {
   return new Promise(resolve => {
     const from = {};
