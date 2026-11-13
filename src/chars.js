@@ -331,10 +331,11 @@ export function makeCharacter(lookKey, overrides = {}) {
     part(0.05, 0.2, 0.05, look.bikini, 0.16, 0.33, 0.19, torso);
   }
   parts.torso = torso;
+  if (look.yoke !== undefined) part(0.68, 0.18, 0.4, look.yoke, 0, 0.29, 0, torso); // ombros de outra cor (farda)
 
   const mkArm = (x) => {
     const p = new THREE.Group(); p.position.set(x, 1.5, 0); body.add(p);
-    part(0.2, 0.5, 0.24, look.sleeveless || look.bikini !== undefined ? look.skin : look.shirt, 0, -0.2, 0, p);
+    part(0.2, 0.5, 0.24, look.sleeveless || look.bikini !== undefined ? look.skin : (look.sleeves ?? look.shirt), 0, -0.2, 0, p);
     part(0.18, 0.26, 0.22, look.longSleeves ? look.shirt : look.skin, 0, -0.56, 0, p);
     return p;
   };

@@ -23,7 +23,7 @@ export const CANDIDATES = [
   { key: 'nanda', name: 'Nanda', art: 'a' },
 ];
 
-const FARDA = { shirt: 0xf7f7f7, pants: 0x1f3a5f }; // PROVISÓRIO: cores da farda
+const FARDA = { shirt: 0xf7f7f7, sleeves: 0x1c2a4a, yoke: 0x1c2a4a, pants: 0x1c2a4a }; // farda: branca com ombros e mangas azul-marinho
 
 // ---------------------------------------------------------------------
 // utilidades
@@ -1268,19 +1268,58 @@ export const MEMORIES = [
     build(st, api) {
       st.engine = api;
       // pela planta: banheiro e coordenação em cima, corredor no meio e a sala de aula embaixo
-      const WALL = 0xeae3d2, TRIM = 0x2f6fae, H = 3.2;
-      const wallX = (z, x1, x2, h = H, c = WALL) => st.box((x1 + x2) / 2, 0, z, x2 - x1, h, 0.3, c, { solid: true });
-      const wallZ = (x, z1, z2, h = H, c = WALL) => st.box(x, 0, (z1 + z2) / 2, 0.3, h, z2 - z1, c, { solid: true });
+      const WALL = 0xf4f4f2, TRIM = 0x1c2a4a, H = 3.2, TILE_H = 1.6;
+      // paredes como nas fotos: azulejo branco na parte de baixo e branco liso em cima
+      const tileTex = (() => {
+        const c = document.createElement('canvas'); c.width = c.height = 128;
+        const g = c.getContext('2d'); g.fillStyle = '#f7f7f5'; g.fillRect(0, 0, 128, 128);
+        g.fillStyle = '#c9ced2'; [0, 64].forEach(v => { g.fillRect(v, 0, 3, 128); g.fillRect(0, v, 128, 3); });
+        const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+        st.disposables.push(tex); return tex;
+      })();
+      const tiled = (cx, cz, w, d, h) => {
+        const hl = Math.min(h, TILE_H);
+        const t = tileTex.clone(); t.needsUpdate = true; t.repeat.set(Math.max(w, d) / 0.6, hl / 0.6);
+        const m = new THREE.Mesh(new THREE.BoxGeometry(w, hl, d), new THREE.MeshLambertMaterial({ map: t }));
+        m.position.set(cx, hl / 2, cz); m.castShadow = true; m.receiveShadow = true; st.add(m);
+        st.disposables.push(t, m.geometry, m.material);
+        const out = [m];
+        if (h > TILE_H) out.push(st.box(cx, TILE_H, cz, w, h - TILE_H, d, WALL));
+        return out;
+      };
+      const wallX = (z, x1, x2, h = H) => { st.solid(x1, x2, z - 0.15, z + 0.15); return tiled((x1 + x2) / 2, z, x2 - x1, 0.3, h); };
+      const wallZ = (x, z1, z2, h = H) => { st.solid(x - 0.15, x + 0.15, z1, z2); return tiled(x, (z1 + z2) / 2, 0.3, z2 - z1, h); };
+      // janela alta de corredor: vidro escuro com moldura de alumínio (aparece dos dois lados da parede)
+      const hiWin = (x, z, alongX, w, y0 = 1.95, hh = 0.95) => {
+        const out = [];
+        const [sx, sz] = alongX ? [w, 0.36] : [0.36, w];
+        out.push(st.box(x, y0, z, sx, hh, sz, 0x2f3a44, { cast: false }));
+        const [fx, fz] = alongX ? [w + 0.1, 0.38] : [0.38, w + 0.1];
+        out.push(st.box(x, y0 - 0.06, z, fx, 0.06, fz, 0xc9ccd1, { cast: false }));
+        out.push(st.box(x, y0 + hh, z, fx, 0.06, fz, 0xc9ccd1, { cast: false }));
+        out.push(st.box(x, y0, z, alongX ? 0.05 : 0.38, hh, alongX ? 0.38 : 0.05, 0xc9ccd1, { cast: false }));
+        return out;
+      };
+      // bandeirinhas escuras atravessando o corredor
+      const pennants = (ax, az, bx, bz, y = 2.95) => {
+        rope(st, new THREE.Vector3(ax, y, az), new THREE.Vector3(bx, y, bz), 0.02, 0x333333);
+        const n = Math.max(2, Math.round(Math.hypot(bx - ax, bz - az) / 0.6));
+        for (let k = 1; k < n; k++) {
+          const f = k / n;
+          const m = new THREE.Mesh(new THREE.ConeGeometry(0.17, 0.36, 3), mat(k % 3 === 1 ? 0xc0392b : 0x1c2a4a));
+          m.rotation.x = Math.PI; m.position.set(ax + (bx - ax) * f, y - 0.2, az + (bz - az) * f); st.add(m);
+        }
+      };
       const glass = (x, z, w, d) => st.box(x, 0.9, z, w, 1.7, d, 0xbfe3f0, { opacity: 0.28, cast: false });
       lights(st, { hemi: 1.6, sun: 1.1, shadow: 22 });
 
       // pisos
       st.floor(-11.6, -4.6, -10, -3, 0xf2f4f5, { checker: 0xe1e6e9, tile: 0.7 });   // banheiro
-      st.floor(-4.6, -1.8, -10, -3, 0xcfd6dc, { checker: 0xbcc5cc, tile: 1.1 });    // passagem
-      st.floor(-1.8, 7.4, -10, -3, 0xd9c09a, { checker: 0xcdb38c, tile: 1.1 });     // coordenação
-      st.floor(-8, 6, -3, -0.8, 0xcfd6dc, { checker: 0xbcc5cc, tile: 1.1 });        // corredor
-      st.floor(-4.75, -1.6, -0.8, 10.1, 0xcfd6dc, { checker: 0xbcc5cc, tile: 1.1 }); // corredor até a sala
-      st.floor(-1.6, 11.6, -0.8, 10.1, 0xe8e4da, { checker: 0xdcd7cb, tile: 1.1 }); // sala
+      st.floor(-4.6, -1.8, -10, -3, 0xecebe6, { checker: 0xe0dfd9, tile: 1.0 });    // passagem
+      st.floor(-1.8, 7.4, -10, -3, 0xf0f0ee, { checker: 0xe4e4e1, tile: 1.0 });     // coordenação
+      st.floor(-8, 6, -3, -0.8, 0xecebe6, { checker: 0xe0dfd9, tile: 1.0 });        // corredor
+      st.floor(-4.75, -1.6, -0.8, 10.1, 0xecebe6, { checker: 0xe0dfd9, tile: 1.0 }); // corredor até a sala
+      st.floor(-1.6, 11.6, -0.8, 10.1, 0xf1f1ef, { checker: 0xe5e5e2, tile: 1.0 }); // sala
 
       // ---------------- BANHEIRO ----------------
       wallX(-10, -11.6, -4.6); wallZ(-11.6, -10, -3);
@@ -1289,7 +1328,7 @@ export const MEMORIES = [
       glass(-9.8, -3, 2.4, 0.06);
       // parede da direita com o portão de entrada embaixo
       wallZ(-4.6, -10, -4.9);
-      st.box(-4.6, 0, -3.4, 0.3, H, 0.4, WALL, { solid: true });
+      st.solid(-4.75, -4.45, -3.6, -3.2); tiled(-4.6, -3.4, 0.3, 0.4, H);
       // cabines na parede da esquerda (a do meio fechada)
       const CAB = 0x9fbccc;
       [-8.3, -6.6, -4.9].forEach(z => st.box(-10.8, 0, z, 1.6, 2.2, 0.08, CAB));
@@ -1321,14 +1360,20 @@ export const MEMORIES = [
       wallX(-3, -1.8, 7.4, 0.9); glass(2.3, -3, 5.6, 0.06);
       st.sign('COORDENAÇÃO', -1.97, 2.75, -8.0, 2.0, 0.4, { bg: '#2f6fae', fg: '#ffffff', rotY: -Math.PI / 2 });
       // mesa comprida, duas cadeiras de um lado e a da coordenação do outro, armário cinza no canto
-      st.table(3.25, -5.6, 1.3, 3.8, 0x7a4a2a);
-      st.box(3.4, 0.85, -6.3, 0.5, 0.4, 0.08, 0x2b2b2b); st.box(3.4, 0.85, -6.25, 0.12, 0.08, 0.2, 0x2b2b2b);
+      st.table(3.25, -5.6, 1.3, 3.8, 0xf0f0ee);
+      st.box(3.6, 0.85, -6.4, 0.55, 0.42, 0.06, 0x1a1a1a); st.box(3.6, 0.85, -6.36, 0.12, 0.1, 0.2, 0x1a1a1a);
+      st.box(3.3, 0.85, -6.4, 0.08, 0.02, 0.4, 0x222222, { cast: false });
+      st.box(3.5, 0.85, -7.1, 0.6, 0.32, 0.5, 0xd9d9d6);
+      // janela com cortina bege na parede da direita
+      st.box(7.22, 1.0, -5.2, 0.04, 1.6, 1.8, 0x9fb7c8, { cast: false });
+      st.box(7.16, 0.8, -4.55, 0.08, 2.0, 0.6, 0xe8d9b5, { cast: false });
       [[-6.5], [-4.8]].forEach(([z]) => st.chair(2.0, z, Math.PI / 2, 0x333333));
       st.chair(4.55, -5.9, -Math.PI / 2, 0x333333);
-      st.box(6.7, 0, -8.4, 1.1, 2.3, 3.0, 0x8a8a8a, { solid: true });
-      st.box(6.14, 1.0, -8.4, 0.02, 0.06, 0.4, 0x555555, { cast: false });
-      api.npc('titia', 4.55, -5.9, { sit: true, y: 0.1, rot: -Math.PI / 2, facePlayer: false, solid: false });
-      api.npc('mayara', 2.0, -6.5, { sit: true, y: 0.1, rot: Math.PI / 2, facePlayer: false, solid: false, ambient: 'Laura é perversa!', ambientR: 5 });
+      st.box(6.7, 0, -8.4, 1.1, 2.3, 3.0, 0xc9cdd1, { solid: true });
+      st.box(6.14, 0, -8.4, 0.02, 2.3, 0.03, 0x9aa0a6, { cast: false });
+      st.box(6.13, 1.1, -8.6, 0.03, 0.18, 0.04, 0x6a6f74, { cast: false }); st.box(6.13, 1.1, -8.2, 0.03, 0.18, 0.04, 0x6a6f74, { cast: false });
+      api.npc('titia', 4.55, -5.9, { sit: true, y: 0.1, rot: -Math.PI / 2, facePlayer: false, solid: false, look: { shirt: 0x1c2a4a } });
+      api.npc('mayara', 2.0, -6.5, { sit: true, y: 0.1, rot: Math.PI / 2, facePlayer: false, solid: false, look: { shirt: 0x1c2a4a }, ambient: 'Laura é perversa!', ambientR: 5 });
 
       // ---------------- CORREDORES ----------------
       wallZ(-8, -3, -0.8);              // ponta esquerda do corredor
@@ -1336,12 +1381,17 @@ export const MEMORIES = [
       wallX(-0.8, -8, -4.75, 0.5);      // borda de baixo (lado de fora)
       wallZ(-4.75, -0.8, 10.1);         // parede do corredor que desce até a sala
       wallX(10.1, -4.75, -1.6, 0.5);
+      [-6.2, -3.2, 0.5, 4.0].forEach(x => pennants(x, -3.0, x, -0.8));
+      [1.5, 4.5, 7.5].forEach(z => pennants(-4.6, z, -1.75, z));
+      const cut = [0xf2c230, 0x3fa7d6, 0xe8743b, 0x7fc8a9, 0xd98fa6, 0x8e44ad];
+      for (let i = 0; i < 9; i++) st.box(-4.58, 1.95 + (i % 3) * 0.32, 0.4 + i * 1.05, 0.03, 0.22, 0.42, cut[i % cut.length], { cast: false });
 
       // ---------------- SALA DE AULA ----------------
       // parede de cima com pôsteres de trabalhos em cartolina (fica transparente quando o boneco está atrás dela)
       const fadeList = [];
-      fadeList.push(wallX(-0.8, -1.6, 11.6));
-      fadeList.push(st.box(4.0, 0, -0.62, 13.2, 0.35, 0.04, TRIM, { cast: false }));
+      fadeList.push(...wallX(-0.8, -1.6, 11.6));
+      [1.0, 5.0, 9.0].forEach(x => fadeList.push(...hiWin(x, -0.8, true, 1.6, 2.2, 0.8)));
+      
       const posterCols = [0xf2c230, 0x3fa7d6, 0xe8743b, 0x7fc8a9, 0xd98fa6, 0xb9a3d6];
       for (let i = 0; i < 6; i++) {
         const px = -0.4 + i * 2.0, py = 1.35 + (i % 2) * 0.25, pz = -0.62;
@@ -1353,6 +1403,8 @@ export const MEMORIES = [
       fader(st, fadeList, () => api.player && api.player.root.position.z < -0.9);
       // parede da esquerda com a porta embaixo; placa SALA do lado do corredor
       wallZ(-1.6, -0.8, 8.1); wallZ(-1.6, 9.2, 10.1);
+      [0.9, 3.1, 5.3].forEach(z => hiWin(-1.6, z, false, 1.5));
+      st.box(-0.95, 0, 9.12, 1.05, 2.1, 0.06, 0xc0392b); // porta vermelha aberta
       st.sign('SALA', -1.77, 2.75, 8.65, 1.2, 0.4, { bg: '#2f6fae', fg: '#ffffff', rotY: -Math.PI / 2 });
       // parede da direita: janelas escuras e altas com cortinas bege
       wallZ(11.6, -0.8, 10.1);
@@ -1383,9 +1435,10 @@ export const MEMORIES = [
       const abcM = new THREE.Mesh(new THREE.PlaneGeometry(5.6, 0.86), new THREE.MeshBasicMaterial({ map: abc, toneMapped: false }));
       abcM.position.set(2.0, 0.92, 9.9); abcM.rotation.y = Math.PI; st.add(abcM); st.disposables.push(abcM.geometry, abcM.material);
       // mesa e cadeira do professor entre dois armários cinza
-      st.box(7.0, 0, 8.9, 1.2, 2.2, 2.1, 0x8a8a8a, { solid: true });
-      st.box(10.2, 0, 8.9, 1.1, 2.2, 2.3, 0x8a8a8a, { solid: true });
-      st.table(8.6, 8.5, 1.4, 0.8, 0x2f6fae);
+      st.box(7.0, 0, 8.9, 1.2, 2.2, 2.1, 0xc9cdd1, { solid: true });
+      st.box(10.2, 0, 8.9, 1.1, 2.2, 2.3, 0xc9cdd1, { solid: true });
+      st.box(6.38, 0, 8.9, 0.02, 2.2, 0.03, 0x9aa0a6, { cast: false }); st.box(9.63, 0, 8.9, 0.02, 2.2, 0.03, 0x9aa0a6, { cast: false });
+      st.table(8.6, 8.5, 1.4, 0.8, 0xf0f0ee);
       st.chair(8.6, 9.3, Math.PI, 0x2f6fae);
       // umas 7 fileiras de 6 carteiras azuis, viradas para o quadro
       const seats = [];
