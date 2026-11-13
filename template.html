@@ -91,6 +91,19 @@
   .placeholder .grid { display: grid; grid-template-columns: repeat(6, 7vw); gap: .8vw; margin-bottom: 1em; }
   .placeholder .grid i { height: 7vw; background: linear-gradient(135deg, #f2c230, #d7372f); border-radius: 8px; opacity: .55; }
   .placeholder.msg { font-style: italic; }
+  /* mosaico de fotos do final */
+  #screen.mosaic { background: #1b100c; }
+  #screen.mosaic .cont { color: #c9b29a; z-index: 3; }
+  .mz-bg { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 35%, #5a2a1e 0%, #2a1610 55%, #140b08 100%); }
+  .mz-bg::after { content: ''; position: absolute; inset: 0; opacity: .35; background-image: radial-gradient(circle, #f2c230 2px, transparent 3px), radial-gradient(circle, #d7372f 2px, transparent 3px), radial-gradient(circle, #2f7a4e 2px, transparent 3px); background-size: 170px 150px, 230px 190px, 140px 210px; background-position: 0 0, 60px 80px, 110px 30px; animation: mzdrift 40s linear infinite; }
+  @keyframes mzdrift { to { background-position: 0 600px, 60px 680px, 110px 630px; } }
+  .mz-title { position: absolute; top: 3vh; left: 0; right: 0; z-index: 3; font-size: clamp(22px, 3.2vw, 60px); font-weight: 700; color: #fff4e0; text-shadow: 0 4px 18px rgba(0,0,0,.55); opacity: 0; animation: mzfade 1.4s ease forwards; animation-delay: var(--d); }
+  #mosaico { position: absolute; left: 2.5vw; right: 2.5vw; top: 12vh; bottom: 7vh; z-index: 2; }
+  .mz-tile { position: absolute; margin: 0; overflow: hidden; border-radius: 10px; border: 4px solid #fff4e0; box-shadow: 0 10px 28px rgba(0,0,0,.5); background: #2a1610; opacity: 0; transform: translateY(40px) rotate(calc(var(--r) * 3)) scale(.82); animation: mzin .9s cubic-bezier(.2,.9,.25,1.15) forwards; animation-delay: var(--d); }
+  .mz-tile img { width: 100%; height: 100%; object-fit: cover; display: block; animation: mzkb var(--kb) ease-in-out infinite alternate; }
+  @keyframes mzin { to { opacity: 1; transform: translateY(0) rotate(var(--r)) scale(1); } }
+  @keyframes mzkb { from { transform: scale(1); } to { transform: scale(1.07); } }
+  @keyframes mzfade { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
   .confetti { position: absolute; inset: -20vh 0 0; pointer-events: none; background-image: radial-gradient(circle, #d7372f 6px, transparent 7px), radial-gradient(circle, #2f7a4e 5px, transparent 6px), radial-gradient(circle, #f2c230 6px, transparent 7px), radial-gradient(circle, #3fa7d6 4px, transparent 5px); background-size: 140px 160px, 190px 130px, 120px 210px, 170px 150px; background-position: 0 0, 40px 60px, 80px 20px, 20px 100px; animation: fall 6s linear infinite; opacity: .8; }
   @keyframes fall { to { background-position: 0 800px, 40px 900px, 80px 1000px, 20px 760px; } }
 

@@ -7,6 +7,7 @@ import fotoAniversario from '../assets/aniversario-grupo.jpg';
 import fotoPlacaNala from '../assets/formatura-placa-nala.jpg';
 import fotoFormatura from '../assets/formatura-nala.jpg';
 import { SECRET_NAME, SECRET_KEY } from './secret.js';
+import { mosaicoHTML, montarMosaico, temMosaico } from './mosaico.js';
 
 // =====================================================================
 // LISTA DO AMIGO SECRETO (quem pode ser o boneco)
@@ -1627,7 +1628,16 @@ export const MEMORIES = [
           await api.screen(`<div class="reveal"><div class="small">Eu sou</div><div class="big">${SECRET_NAME.toUpperCase()}</div></div><div class="confetti"></div>`, { cls: 'party' });
           await api.screen(`<div class="placeholder"><div class="ph-icon">▶</div><div>Aqui entra o vídeo de ${SECRET_NAME}</div><small>(enviar o arquivo para incluir)</small></div>`);
           await api.screen(`<div class="placeholder msg"><div>Aqui entra a sua mensagem para ${SECRET_NAME}.</div><small>(texto a escrever)</small></div>`);
-          await api.screen(`<div class="placeholder"><div class="grid">${'<i></i>'.repeat(12)}</div><div>Mosaico de fotos</div><small>(enviar as fotos)</small></div>`);
+          if (temMosaico()) {
+            const shown = api.screen(mosaicoHTML('Eu sou feito de vocês.'), { cls: 'mosaic' });
+            montarMosaico();
+            const onResize = () => montarMosaico();
+            window.addEventListener('resize', onResize);
+            await shown;
+            window.removeEventListener('resize', onResize);
+          } else {
+            await api.screen(`<div class="placeholder"><div class="grid">${'<i></i>'.repeat(12)}</div><div>Mosaico de fotos</div><small>(enviar as fotos)</small></div>`);
+          }
           await api.screen(`<div class="reveal"><div class="small">Feliz</div><div class="big long">Chapaternização<br>2026</div><div class="small">${SECRET_NAME}, o amigo secreto de Alice</div></div><div class="confetti"></div>`, { cls: 'party', wait: false });
         },
       });
