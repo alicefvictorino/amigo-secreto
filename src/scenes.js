@@ -1413,7 +1413,7 @@ export const MEMORIES = [
           await api.eliminate('breno');
           await api.wait(600);
           await api.thought('Só sobrou um nome.');
-          await api.complete('Agora eu preciso me ver.');
+          await api.complete();
         },
       });
       breno.root.visible = false;
