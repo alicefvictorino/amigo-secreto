@@ -237,9 +237,9 @@ export function buildPrologue(st, api) {
       await api.camTo(new THREE.Vector3(1.5, 2.5, 2.4), new THREE.Vector3(-0.1, 1.9, -2.3), 10);
       api.sfx.pad();
       await api.narrate([
-        'Tem dias que pesam mais que os outros.',
-        'Nesses dias, a gente segura as pontas, sorri mesmo assim e segue em frente.',
-        'Só que, de tanto segurar, às vezes a gente esquece de se olhar.',
+        'Todo dia eu acordo, acendo a luz e me olho no espelho.',
+        'É um jeito de conferir se eu continuo aqui.',
+        'Quase sempre, continuo.',
         async () => {
           // a luz acende devagar, piscando
           for (let i = 0; i < 4; i++) { lamp.intensity = 4; await api.wait(90); lamp.intensity = 0; await api.wait(140); }
