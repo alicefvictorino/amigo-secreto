@@ -1060,7 +1060,7 @@ export const MEMORIES = [
       [-5.2, 5.2].forEach((x, i) => api.npc('extra', x, -6.9, { y: 0.7, dance: true, facePlayer: false, solid: false, look: dress(0x0f6a4a, { skin: skins[i + 1], hair: 0x1a120c, hairStyle: 'long' }) }));
 
       // pista de dança: convidados
-      const floorSpots = [[-6.4, -4.8], [-4.6, -4.0], [-3.0, -5.0], [-1.6, -4.4], [1.8, -4.9], [3.4, -4.2], [5.0, -5.0], [6.6, -4.0], [-6.8, -2.0], [-5.0, -1.2], [5.2, -1.6], [6.9, -2.6]];
+      const floorSpots = [[-6.4, -4.8], [-4.6, -4.0], [-3.0, -5.0], [-1.9, -4.3], [1.8, -4.9], [3.4, -4.2], [5.0, -5.0], [6.6, -4.0], [-6.8, -2.0], [-5.0, -1.2], [5.2, -1.6], [6.9, -2.6]];
       floorSpots.forEach(([x, z], i) => {
         const n = api.npc('extra', x, z, { dance: true, facePlayer: false, look: i % 2 ? man(i) : woman(i) });
         n.ch.anim.t = i * 0.41;
@@ -1126,9 +1126,9 @@ export const MEMORIES = [
       const tail = bpart(0.03, 0.06, 0.02, 0x1f4fa0, 0.05, 0.205, 0.092); tail.rotation.z = -0.6;
       const hanna = api.npc('hanna', 1.5, -1.9, { dance: true, look: dress(0x8a5a3a) });
       const alice = api.npc('alice', 2.5, -3.0, { dance: true, look: dress(0xb9a3d6) });
-      const lisis = api.npc('lisis', -0.6, -3.6, { dance: true, look: dress(0xf2f2f2, { longSleeves: true }) });
+      const lisis = api.npc('lisis', -3.6, -3.9, { dance: true, look: dress(0xf2f2f2, { longSleeves: true }) });
       const analuz = api.npc('analuz', -2.6, -3.1, { dance: true, look: dress(0x1c2a5a) });
-      const yasmim = api.npc('yasmim', 1.0, -3.9, { dance: true, look: dress(0x6e1a2e) });
+      const yasmim = api.npc('yasmim', 2.0, -3.9, { dance: true, look: dress(0x6e1a2e) });
       const nanda = api.npc('nanda', nalaSeats[2][0], nalaSeats[2][1], { sit: true, y: 0.1, rot: nalaSeats[2][2], facePlayer: false, look: dress(0xe8d3a8) });
       const chinelo = api.npc('chinelo', nalaSeats[5][0], nalaSeats[5][1], { sit: true, y: 0.1, rot: nalaSeats[5][2], facePlayer: false, look: dress(0x151515) });
       // ainda sem rosto: Breno, de terno
@@ -1138,7 +1138,7 @@ export const MEMORIES = [
       dudao.ch.holdArms = true; dudao.ch.parts.armR.rotation.x = -1.45; dudao.ch.parts.armL.rotation.x = -0.9;
 
       // Nala, a formanda, de vestido verde de cetim, dançando no meio da pista
-      const nala = api.npc('nala', 0.1, -2.6, {
+      const nala = api.npc('nala', -1.5, -2.4, {
         dance: true, r: 2.2, label: 'Falar com a formanda',
         look: dress(0x0f5a42, { strapless: true, hairStyle: 'bun', shoes: 0x0f5a42 }),
         lines: [{ text: 'AAAAAAAAAAAAAAAAAAAAA', style: 'shout', sfx: 'scream' }],
@@ -1157,8 +1157,11 @@ export const MEMORIES = [
       // Lucas Boquinha puxa o grito e a chapa inteira grita junto, no mesmo instante
       const chapa = [flora, hanna, alice, lisis, analuz, yasmim, nanda, chinelo, dudao, nala, breno];
       const pula = (n) => { const y0 = n.root.position.y; return api.tween(n.root.position, { y: y0 + 0.45 }, 170, 'out').then(() => api.tween(n.root.position, { y: y0 }, 170, 'in')); };
+      // dá para chamar o cantor de qualquer ponto da frente do palco (a pista no meio é cheia de gente)
+      const beiraPalco = new THREE.Vector3();
       api.interact({
-        pos: () => cantor.root.position, r: 2.8, label: 'Falar com Lucas Boquinha', once: false,
+        pos: () => beiraPalco.set(Math.max(-6, Math.min(6, api.player.root.position.x)), 0.7, -6.0), r: 1.4, h: 1.8,
+        label: 'Falar com Lucas Boquinha', once: false,
         onInteract: async () => {
           const back = api.camera.position.clone();
           await api.camTo(new THREE.Vector3(0.3, 8.6, 6.4), new THREE.Vector3(0.3, 1.0, -3.0), 700);
