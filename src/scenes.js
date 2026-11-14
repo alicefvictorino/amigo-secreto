@@ -1622,14 +1622,20 @@ export const MEMORIES = [
           await api.wait(300);
           api.swapPlayer(SECRET_KEY);
           api.sfx.reveal();
+          const revealAt = performance.now();
           await api.wait(1800);
           await api.thought('Sou eu.');
           await api.finishMemory();
+          // a música de comemoração entra quando a fanfarra termina
+          let musica = 'comemoracao';
+          setTimeout(() => { if (musica === 'comemoracao') api.playMusic('comemoracao'); }, Math.max(0, 4700 - (performance.now() - revealAt)));
           await api.screen(`<div class="reveal"><div class="small">Eu sou</div><div class="big">${SECRET_NAME.toUpperCase()}</div></div><div class="confetti"></div>`, { cls: 'party' });
           // mensagem de Alice, com corações subindo
           const hearts = Array.from({ length: 26 }, (_, i) => `<span class="heart" style="left:${(i * 37) % 100}%;--d:${((i * 0.53) % 6).toFixed(2)}s;--t:${(6 + (i % 5) * 1.1).toFixed(1)}s;--s:${(0.7 + (i % 4) * 0.35).toFixed(2)}">♥</span>`).join('');
           await api.screen(`<div class="hearts">${hearts}</div><div class="love"><div class="l1">TE AMO</div><div class="l2">${SECRET_NAME.toUpperCase()}</div></div>`, { cls: 'party lovecard' });
           if (temMosaico()) {
+            musica = 'saudade';
+            api.playMusic('saudade');
             const shown = api.screen(mosaicoHTML('Eu sou feito de vocês.'), { cls: 'mosaic' });
             montarMosaico();
             const onResize = () => montarMosaico();
@@ -1639,6 +1645,8 @@ export const MEMORIES = [
           } else {
             await api.screen(`<div class="placeholder"><div class="grid">${'<i></i>'.repeat(12)}</div><div>Mosaico de fotos</div><small>(enviar as fotos)</small></div>`);
           }
+          musica = 'fim';
+          api.playMusic('comemoracao');
           await api.screen(`<div class="reveal"><div class="small">Feliz</div><div class="big long">Chapaternização<br>2026</div><div class="small">${SECRET_NAME}, o amigo secreto de Alice</div></div><div class="confetti"></div>`, { cls: 'party', wait: false });
         },
       });
