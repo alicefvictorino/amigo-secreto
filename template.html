@@ -128,6 +128,8 @@
   #start .tag { display: inline-block; background: var(--vermelho); color: var(--creme); font-weight: 700; padding: .2em .8em; border-radius: 99px; font-size: clamp(13px, 1.1vw, 20px); border: 2px solid var(--escuro); }
   #start h1 { font-size: clamp(48px, 7vw, 140px); margin: 0 0 .35em; line-height: .95; color: var(--escuro); }
   #start h1 em { font-style: normal; color: var(--vermelho); }
+  #start .presents { font-size: clamp(18px, 1.9vw, 36px); font-weight: 600; color: #5a4636; letter-spacing: .02em; margin-bottom: .2em; opacity: 0; animation: presentsIn 1.2s ease .2s forwards; }
+  @keyframes presentsIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
   #start p { font-size: clamp(15px, 1.3vw, 24px); color: #5a4636; margin: .4em 0 1.2em; }
   #start button { font-family: inherit; font-size: clamp(18px, 1.8vw, 34px); font-weight: 700; background: var(--verde); color: var(--creme); border: 3px solid var(--escuro); border-radius: 16px; padding: .45em 1.4em; cursor: pointer; box-shadow: 0 6px 0 var(--escuro); }
   #start button:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--escuro); }
@@ -161,6 +163,7 @@
 <div id="flash"></div>
 <div id="start">
   <div class="box">
+    <div class="presents">Alice apresenta...</div>
     <h1>Quem sou <em>eu?</em></h1>
     <button id="startBtn">Começar ▸</button>
     <div class="jumps pres-only">
