@@ -638,7 +638,6 @@ async function startPrologue() {
   const st = makeStage();
   const cfg = buildPrologue(st, api);
   applyStageConfig(st, cfg);
-  playMusic('prologo');
   await fade(0, 1200);
   await cfg.run();
   await fade(1, 900);
