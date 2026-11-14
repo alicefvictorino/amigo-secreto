@@ -638,6 +638,7 @@ async function startPrologue() {
   const st = makeStage();
   const cfg = buildPrologue(st, api);
   applyStageConfig(st, cfg);
+  playMusic('prologo');
   await fade(0, 1200);
   await cfg.run();
   await fade(1, 900);
@@ -651,6 +652,7 @@ async function enterCorridor(first = false) {
   const st = makeStage();
   const cfg = buildCorridor(st, api, { next: state.nextDoor, completed: state.completed, memories: MEMORIES, onEnter: (i) => enterMemory(i) });
   applyStageConfig(st, cfg);
+  playMusic('corredor');
   showHud(true);
   await fade(0, 700);
   if (first) {
@@ -756,6 +758,10 @@ function startGame() {
   startPrologue();
 }
 $('startBtn').addEventListener('click', startGame);
+// música da tela inicial: começa já se o navegador deixar, senão no primeiro clique ou tecla
+initAudio();
+playMusic('menu');
+['pointerdown', 'keydown', 'touchstart'].forEach(ev => document.addEventListener(ev, () => initAudio(), { capture: true }));
 document.querySelectorAll('[data-jump]').forEach(b => b.addEventListener('click', () => { initAudio(); buildHud(); jumpTo(+b.dataset.jump); }));
 document.body.classList.toggle('presenter', PRESENTER);
 buildHud();

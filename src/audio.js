@@ -110,6 +110,86 @@ const FESTA = {
 // calmo (corredor e avião): C, Am, F, G em arpejos de caixinha de música
 const CALMO = { chords: [[60, 64, 67, 72], [57, 60, 64, 69], [53, 57, 60, 65], [55, 59, 62, 67]], roots: [48, 45, 41, 43] };
 
+// "chip": onda quadrada suavizada (som de videogame), sem vibrato
+function chip(n, dur, { when = 0, out = null, vol = 0.026, type = 'square', cutoff = 3000 } = {}) {
+  if (!ctx) return;
+  const t = ctx.currentTime + when;
+  const o = ctx.createOscillator(); o.type = type; o.frequency.value = midi(n);
+  const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = cutoff; f.Q.value = 0.5;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(vol, t + 0.006);
+  g.gain.setValueAtTime(vol * 0.8, t + Math.max(0.01, dur - 0.03));
+  g.gain.linearRampToValueAtTime(0, t + dur + 0.04);
+  o.connect(f); f.connect(g); g.connect(out || master);
+  o.start(t); o.stop(t + dur + 0.06);
+}
+const wood = (when, out, vol = 0.04) => { tone(1700, 0.05, { type: 'triangle', vol, when, out, attack: 0.001 }); tone(2600, 0.03, { vol: vol * 0.4, when, out, attack: 0.001 }); };
+const snareChip = (when, out, vol = 0.05) => noise(0.08, { vol, freq: 2000, q: 0.7, when, out, attack: 0.001 });
+
+// tela inicial: tema de videogame, alegre (C, Am, F, G)
+const MENU = {
+  bpm: 132,
+  chords: [[60, 64, 67], [57, 60, 64], [53, 57, 60], [55, 59, 62]],
+  roots: [48, 45, 41, 43],
+  mel: [
+    [67, 72, 76, 79, 76, 72, 76, 79], [81, null, 76, null, 72, 76, 81, null],
+    [77, 81, 84, null, 81, 77, 81, 84], [83, null, 79, null, 74, null, 79, null],
+    [84, null, 79, 76, 84, null, 79, 76], [81, null, 76, 72, 81, null, 84, null],
+    [77, 79, 81, 84, 81, 79, 77, 81], [79, null, 74, 71, 79, null, null, null],
+  ],
+};
+// prólogo: caixinha de música sonhadora e baixinha (Cmaj7, Fmaj7)
+const PROLOGO = { chords: [[60, 64, 67, 71], [53, 57, 60, 64]], roots: [48, 41] };
+// corredor das memórias: tema calmo de "mapa" de videogame (F, Dm, Bb, C)
+const CORREDOR = {
+  bpm: 96,
+  chords: [[53, 57, 60], [50, 53, 57], [46, 50, 53], [48, 52, 55]],
+  roots: [41, 38, 46, 48],
+  mel: [
+    [69, null, 72, null, 77, null, 76, null], [74, null, 77, null, 81, null, 79, 77],
+    [77, null, 74, null, 70, null, 74, null], [76, null, 79, null, 84, null, null, null],
+    [81, null, 79, 77, 72, null, 77, null], [77, null, 76, 74, 69, null, 74, null],
+    [74, 77, 82, null, 81, null, 79, null], [79, null, 76, null, 72, null, null, null],
+  ],
+};
+// escola: brincalhona, de recreio (C, F, C, G)
+const ESCOLA = {
+  bpm: 120,
+  chords: [[60, 64, 67], [60, 65, 69], [60, 64, 67], [59, 62, 67], [60, 64, 67], [60, 65, 69], [60, 64, 67], [59, 62, 67]],
+  roots: [48, 41, 48, 43, 48, 41, 48, 43],
+  mel: [
+    [72, 76, 79, 76, 72, null, 67, null], [69, 72, 77, 72, 69, null, 65, null],
+    [76, 79, 84, 79, 76, null, 72, null], [74, null, 79, null, 71, null, 74, null],
+    [79, 76, 79, 76, 84, null, 79, null], [81, 77, 81, 77, 84, null, 81, null],
+    [79, null, 76, null, 79, 77, 76, 74], [74, null, 71, null, 67, null, null, null],
+  ],
+};
+// Vale Encantado: violão dedilhado ao ar livre (G, D, Em, C)
+const VALE = {
+  bpm: 100,
+  chords: [[55, 59, 62], [54, 57, 62], [52, 55, 59], [52, 55, 60]],
+  roots: [43, 50, 52, 48],
+  mel: [
+    [71, null, 74, null, 79, null, null, null], [78, null, 81, null, 74, null, null, null],
+    [79, null, 76, null, 71, null, 76, null], [76, null, 74, 72, 67, null, null, null],
+    [74, null, 79, null, 83, null, 81, 79], [78, null, 81, null, 86, null, null, null],
+    [76, 79, 83, null, 81, 79, 76, null], [76, null, 79, null, 76, 74, null, null],
+  ],
+};
+// formatura: baile dançante (C, G, Am, F)
+const BAILE = {
+  bpm: 120,
+  chords: [[60, 64, 67], [59, 62, 67], [60, 64, 69], [60, 65, 69]],
+  roots: [48, 43, 45, 41],
+  mel: [
+    [76, null, 76, null, 79, null, 76, 74], [74, null, 74, null, 79, null, 74, 71],
+    [72, null, 76, null, 81, null, 79, 76], [77, null, 81, null, 84, null, 81, null],
+    [79, null, 84, null, 79, 76, 79, null], [83, null, 86, null, 83, 79, 74, null],
+    [84, null, 83, 81, 76, null, 81, null], [81, null, 79, 77, 72, null, null, null],
+  ],
+};
+
 const melDur = (bar, i, step8) => { let k = i + 1; while (k < bar.length && bar[k] === null) k++; return (k - i) * step8 * 0.92; };
 
 export const sfx = {
@@ -213,8 +293,8 @@ export function playMusic(kind) {
   bus.connect(comp); comp.connect(master);
   const out = bus;
   let step = 0;
-  const song = { comemoracao: ALEGRE, saudade: DOCE, festa: FESTA, calmo: CALMO }[kind] || null;
-  const bpm = kind === 'paredao' ? 128 : kind === 'calmo' ? 72 : (song && song.bpm) || 100;
+  const song = { comemoracao: ALEGRE, saudade: DOCE, festa: FESTA, calmo: CALMO, menu: MENU, prologo: PROLOGO, corredor: CORREDOR, escola: ESCOLA, vale: VALE, baile: BAILE }[kind] || null;
+  const bpm = kind === 'paredao' ? 128 : kind === 'calmo' ? 72 : kind === 'prologo' ? 60 : (song && song.bpm) || 100;
   const interval = kind === 'paredao' ? 60 / bpm / 2 : 60 / bpm / 4;   // semicolcheias (paredão em colcheias)
   let next = ctx.currentTime + 0.08;
   const bassLine = [55, 55, 65.4, 73.4];
@@ -246,6 +326,83 @@ export function playMusic(kind) {
         const s16 = step % 16, bar = Math.floor(step / 16), c = bar % 4;
         if (s16 === 0) { pad(song.chords[c], 3.0, w, out, 0.016); softBass(song.roots[c] + 12, 1.6, w, out, 0.035); }
         if (s16 % 2 === 0) { const ch = song.chords[c], k = (s16 / 2) % 4; glock(ch[k] + 12 + (s16 >= 8 ? 12 : 0), w, out, 0.032); }
+      } else if (kind === 'menu') {
+        // videogame: melodia quadrada, arpejo rápido, baixo em triângulo, bateria de 8 bits
+        const s16 = step % 16, bar = Math.floor(step / 16), c = bar % 4, s8 = 60 / bpm / 2;
+        if (s16 === 0 || s16 === 8) kick(w, out, 0.09);
+        if (s16 === 4 || s16 === 12) snareChip(w, out, 0.045);
+        if (s16 % 2 === 0) hat(w, out, s16 % 4 ? 0.018 : 0.01);
+        const r = song.roots[c];
+        if (s16 % 4 === 0) chip(r + (s16 % 8 ? 12 : 0), 0.18, { when: w, out, vol: 0.05, type: 'triangle', cutoff: 2000 });
+        if (s16 % 4 === 2) chip(r + 7, 0.12, { when: w, out, vol: 0.035, type: 'triangle', cutoff: 2000 });
+        const ch = song.chords[c];
+        chip(ch[s16 % 3] + 12, 0.07, { when: w, out, vol: 0.009, cutoff: 2600 });
+        if (bar >= 1 && s16 % 2 === 0) {
+          const mb = song.mel[(bar - 1) % 8], i = s16 / 2, n = mb[i];
+          if (n !== null) chip(n, melDur(mb, i, s8), { when: w, out, vol: 0.026 });
+        }
+      } else if (kind === 'prologo') {
+        // caixinha de música bem baixinha
+        const s16 = step % 16, bar = Math.floor(step / 16), c = bar % 2;
+        if (s16 === 0) pad(song.chords[c], 4.2, w, out, 0.01);
+        if (s16 % 4 === 0) glock(song.chords[c][(s16 / 4) % 4] + 12, w, out, 0.022);
+        if (s16 === 10) glock(song.chords[c][3] + 24, w, out, 0.012);
+      } else if (kind === 'corredor') {
+        // tema de mapa: melodia em triângulo, arpejo leve, baixo e pratinho
+        const s16 = step % 16, bar = Math.floor(step / 16), c = bar % 4, s8 = 60 / bpm / 2;
+        if (s16 === 0) kick(w, out, 0.06);
+        if (s16 === 8) snareChip(w, out, 0.025);
+        if (s16 % 4 === 2) hat(w, out, 0.01);
+        if (s16 === 0) softBass(song.roots[c], 0.5, w, out, 0.06);
+        if (s16 === 8) softBass(song.roots[c] + 7, 0.35, w, out, 0.045);
+        if (s16 % 2 === 0) chip(song.chords[c][(s16 / 2) % 3] + 12, 0.12, { when: w, out, vol: 0.012, cutoff: 2200 });
+        if (s16 % 2 === 0) {
+          const mb = song.mel[bar % 8], i = s16 / 2, n = mb[i];
+          if (n !== null) chip(n, melDur(mb, i, s8), { when: w, out, vol: 0.05, type: 'triangle', cutoff: 4000 });
+        }
+      } else if (kind === 'escola') {
+        // recreio: xilofone, pizzicato, palmas e bloquinho de madeira
+        const s16 = step % 16, bar = Math.floor(step / 16), c = bar % 8, s8 = 60 / bpm / 2;
+        if (s16 === 0 || s16 === 8) kick(w, out, 0.08);
+        if (s16 === 4 || s16 === 12) clap(w, out, 0.045);
+        if (s16 % 4 === 2) wood(w, out, 0.03);
+        const r = song.roots[c];
+        if (s16 === 0) softBass(r, 0.22, w, out, 0.07);
+        if (s16 === 4) softBass(r + 7, 0.16, w, out, 0.05);
+        if (s16 === 8) softBass(r + 12, 0.16, w, out, 0.05);
+        if (s16 === 12) softBass(r + 7, 0.16, w, out, 0.05);
+        if (s16 === 2 || s16 === 10) song.chords[c].forEach((n, k) => pluck(n + 12, w + k * 0.01, out, 0.024));
+        if (s16 % 2 === 0) {
+          const mb = song.mel[c], i = s16 / 2, n = mb[i];
+          if (n !== null) pan(n, w, out, 0.05, Math.min(0.5, melDur(mb, i, s8) + 0.1));
+        }
+      } else if (kind === 'vale') {
+        // violão dedilhado, ganzá e melodia de marimba ao ar livre
+        const s16 = step % 16, bar = Math.floor(step / 16), c = bar % 4, s8 = 60 / bpm / 2;
+        const ch = song.chords[c], r = song.roots[c];
+        const pick = [r + 12, ch[1], ch[2], ch[0] + 12, ch[1] + 12, ch[2], ch[1], ch[0] + 12];
+        if (s16 % 2 === 0) pluck(pick[(s16 / 2) % 8], w, out, 0.03);
+        if (s16 === 0) softBass(r, 0.6, w, out, 0.06);
+        if (s16 === 8) softBass(r + 7, 0.4, w, out, 0.045);
+        shaker(w, out, s16 % 2 ? 0.012 : 0.006);
+        if (s16 === 4 || s16 === 12) clap(w, out, 0.025);
+        if (bar >= 1 && s16 % 2 === 0) {
+          const mb = song.mel[(bar - 1) % 8], i = s16 / 2, n = mb[i];
+          if (n !== null) pan(n, w, out, 0.045, Math.min(0.9, melDur(mb, i, s8) + 0.2));
+        }
+      } else if (kind === 'baile') {
+        // baile: bumbo em todo tempo, chimbal no contratempo, palmas, baixo em oitavas e acordes curtinhos
+        const s16 = step % 16, bar = Math.floor(step / 16), c = bar % 4, s8 = 60 / bpm / 2;
+        if (s16 % 4 === 0) kick(w, out, 0.11);
+        if (s16 % 4 === 2) hat(w, out, 0.03);
+        if (s16 === 4 || s16 === 12) clap(w, out, 0.06);
+        const r = song.roots[c];
+        if (s16 % 2 === 0) softBass(r + (s16 % 4 ? 12 : 0), 0.12, w, out, 0.06);
+        if (s16 % 4 === 2) song.chords[c].forEach(n => chip(n + 12, 0.1, { when: w, out, vol: 0.012, cutoff: 2600 }));
+        if (bar >= 2 && s16 % 2 === 0) {
+          const mb = song.mel[(bar - 2) % 8], i = s16 / 2, n = mb[i];
+          if (n !== null) pan(n, w, out, 0.055, Math.min(0.6, melDur(mb, i, s8) + 0.15));
+        }
       } else if (kind === 'comemoracao') {
         // alegre: bumbo nos tempos, palmas no 2 e no 4, chimbal e ganzá, baixo saltitante,
         // violão no contratempo, acorde suave por baixo e melodia de steel pan

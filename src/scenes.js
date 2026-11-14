@@ -699,7 +699,7 @@ export const MEMORIES = [
         camClamp: { minX: -6.5, maxX: 4.5, minZ: -2.5, maxZ: 4.2 },
         background: 0x9fd8ff,
         fog: { color: 0x9fd8ff, near: 28, far: 60 },
-        music: 'calmo',
+        music: 'vale',
       };
     },
   },
@@ -1187,7 +1187,7 @@ export const MEMORIES = [
         spawn: { x: 0, z: 5.8, rot: Math.PI },
         camClamp: { minX: -3.5, maxX: 3.5, minZ: -3, maxZ: 1.5 },
         background: 0x0b0d1e,
-        music: 'festa',
+        music: 'baile',
       };
     },
   },
@@ -1493,6 +1493,7 @@ export const MEMORIES = [
         camOffset: new THREE.Vector3(0, 11, 11),
         camClamp: { minX: -8, maxX: 7, minZ: -7.5, maxZ: 5 },
         background: 0xdfe8ee,
+        music: 'escola',
         onEnter: async () => { api.sfx.bell(); },
       };
     },
