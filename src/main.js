@@ -651,7 +651,6 @@ async function enterCorridor(first = false) {
   const st = makeStage();
   const cfg = buildCorridor(st, api, { next: state.nextDoor, completed: state.completed, memories: MEMORIES, onEnter: (i) => enterMemory(i) });
   applyStageConfig(st, cfg);
-  playMusic('corredor');
   showHud(true);
   await fade(0, 700);
   if (first) {
