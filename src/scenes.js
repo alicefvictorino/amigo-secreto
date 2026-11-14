@@ -1040,7 +1040,7 @@ export const MEMORIES = [
       const dress = (c, more = {}) => ({ shirt: c, skirt: c, sleeveless: true, shoes: 0x222222, ...more });
 
       // banda no palco: cantor, guitarrista, baterista e duas dançarinas
-      api.npc('extra', 0, -6.7, { y: 0.7, dance: true, facePlayer: false, solid: false, look: { skin: 0xc68642, hair: 0x1a120c, hairStyle: 'short', shirt: 0x151515, pants: 0x151515, shoes: 0x111111 }, extras: ['mic'] });
+      const cantor = api.npc('extra', 0, -6.7, { y: 0.7, dance: true, facePlayer: false, solid: false, name: 'Lucas Boquinha', look: { skin: 0xc68642, hair: 0x1a120c, hairStyle: 'short', shirt: 0x151515, pants: 0x151515, shoes: 0x111111 }, extras: ['mic'] });
       const gt = api.npc('extra', -3.0, -7.2, { y: 0.7, facePlayer: false, solid: false, look: { skin: 0xe0ac69, hair: 0x2a1a10, hairStyle: 'short', shirt: 0x2a2a2a, pants: 0x151515 } });
       gt.ch.holdArms = true; gt.ch.parts.armR.rotation.x = -0.7; gt.ch.parts.armL.rotation.x = -1.0;
       const guitar = new THREE.Group(); guitar.position.set(0, -0.12, 0.26); guitar.rotation.z = 0.55; gt.ch.parts.torso.add(guitar);
@@ -1124,15 +1124,15 @@ export const MEMORIES = [
       bpart(0.175, 0.14, 0.02, 0xfdf3f7, 0, 0.18, 0.08, { cast: false });
       bpart(0.09, 0.045, 0.02, 0x1f4fa0, -0.01, 0.18, 0.092);
       const tail = bpart(0.03, 0.06, 0.02, 0x1f4fa0, 0.05, 0.205, 0.092); tail.rotation.z = -0.6;
-      api.npc('hanna', 1.5, -1.9, { dance: true, look: dress(0x8a5a3a) });
-      api.npc('alice', 2.5, -3.0, { dance: true, look: dress(0xb9a3d6) });
-      api.npc('lisis', -0.6, -3.6, { dance: true, look: dress(0xf2f2f2, { longSleeves: true }) });
-      api.npc('analuz', -2.6, -3.1, { dance: true, look: dress(0x1c2a5a) });
-      api.npc('yasmim', 1.0, -3.9, { dance: true, look: dress(0x6e1a2e) });
-      api.npc('nanda', nalaSeats[2][0], nalaSeats[2][1], { sit: true, y: 0.1, rot: nalaSeats[2][2], facePlayer: false, look: dress(0xe8d3a8) });
-      api.npc('chinelo', nalaSeats[5][0], nalaSeats[5][1], { sit: true, y: 0.1, rot: nalaSeats[5][2], facePlayer: false, look: dress(0x151515) });
+      const hanna = api.npc('hanna', 1.5, -1.9, { dance: true, look: dress(0x8a5a3a) });
+      const alice = api.npc('alice', 2.5, -3.0, { dance: true, look: dress(0xb9a3d6) });
+      const lisis = api.npc('lisis', -0.6, -3.6, { dance: true, look: dress(0xf2f2f2, { longSleeves: true }) });
+      const analuz = api.npc('analuz', -2.6, -3.1, { dance: true, look: dress(0x1c2a5a) });
+      const yasmim = api.npc('yasmim', 1.0, -3.9, { dance: true, look: dress(0x6e1a2e) });
+      const nanda = api.npc('nanda', nalaSeats[2][0], nalaSeats[2][1], { sit: true, y: 0.1, rot: nalaSeats[2][2], facePlayer: false, look: dress(0xe8d3a8) });
+      const chinelo = api.npc('chinelo', nalaSeats[5][0], nalaSeats[5][1], { sit: true, y: 0.1, rot: nalaSeats[5][2], facePlayer: false, look: dress(0x151515) });
       // ainda sem rosto: Breno, de terno
-      api.npc('boneco', 3.4, -2.2, { ...grey, dance: true, look: { jacket: 0x5f5f5f, shirt: 0xbdbdbd } });
+      const breno = api.npc('boneco', 3.4, -2.2, { ...grey, dance: true, look: { jacket: 0x5f5f5f, shirt: 0xbdbdbd } });
       // Dudão pedindo a Balena para Flora, com o braço esticado
       const dudao = api.npc('dudao', -1.45, -0.25, { rot: -1.8, facePlayer: false, ambient: 'Me dá a Balena!', ambientR: 3.5, look: dress(0x111111, { hairStyle: 'long' }), extras: ['chain'], lines: [{ text: 'Me dá a Balena!' }], label: 'Falar com Dudão', once: false });
       dudao.ch.holdArms = true; dudao.ch.parts.armR.rotation.x = -1.45; dudao.ch.parts.armL.rotation.x = -0.9;
@@ -1153,6 +1153,24 @@ export const MEMORIES = [
         const b = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.02, 10), mat(c)); b.rotation.x = Math.PI / 2; b.position.set(x, y, 0.2); nala.ch.parts.torso.add(b);
       });
       nala.facePlayer = false;
+
+      // Lucas Boquinha puxa o grito e a chapa inteira grita junto, no mesmo instante
+      const chapa = [flora, hanna, alice, lisis, analuz, yasmim, nanda, chinelo, dudao, nala, breno];
+      const pula = (n) => { const y0 = n.root.position.y; return api.tween(n.root.position, { y: y0 + 0.45 }, 170, 'out').then(() => api.tween(n.root.position, { y: y0 }, 170, 'in')); };
+      api.interact({
+        pos: () => cantor.root.position, r: 2.8, label: 'Falar com Lucas Boquinha', once: false,
+        onInteract: async () => {
+          const back = api.camera.position.clone();
+          await api.camTo(new THREE.Vector3(0.3, 8.6, 6.4), new THREE.Vector3(0.3, 1.0, -3.0), 700);
+          const grito = 'SEPAREI POHAAAAAA';
+          await api.say([{
+            who: cantor, text: 'SEPAREI POHAAA', style: 'shout', sfx: 'crowdShout', instant: true,
+            sim: chapa.map(n => ({ who: n, text: grito, style: 'shout-sm', name: n === breno ? '' : null })),
+            do: () => [cantor, ...chapa].forEach(n => { if (!n.ch.anim || n.ch.anim.mode !== 'sit') pula(n).then(() => pula(n)); }),
+          }]);
+          api.camFollow();
+        },
+      });
 
       // easter egg: celular caído perto da coluna da esquerda com uma foto da festa
       photoClue(st, api, { x: -7.5, z: 2.0, rot: 0.7, photo: fotoFormatura, caption: 'Formatura 2026', thought: 'Que taça enorme... Queria lembrar quem eu sou.' });

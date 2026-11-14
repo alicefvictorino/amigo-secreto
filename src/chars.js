@@ -16,7 +16,7 @@ export const LOOKS = {
   // lista do amigo secreto
   analuz:  { skin: 0xe2b48c, hair: 0x3b2416, hairStyle: 'long', shirt: 0x6fa8dc, pants: 0x34495e },
   breno:   { skin: 0xd9a77c, hair: 0x2a1b10, hairStyle: 'short', shirt: 0x3d7a4f, pants: 0x2c3e50 },
-  dudao:   { skin: 0xc68e62, hair: 0x2a1a10, hairStyle: 'bun', shirt: 0xe67e22, pants: 0x1f3a5f },
+  dudao:   { skin: 0xf1c9a5, hair: 0x2a1a10, hairStyle: 'bun', shirt: 0xe67e22, pants: 0x1f3a5f },
   flora:   { skin: 0xefc7a8, hair: 0x2a1214, hairStyle: 'bob', streaks: 0xb3122a, shirt: 0x8e44ad, pants: 0x222222 },
   hanna:   { skin: 0xe8b896, hair: 0x6b4226, hairStyle: 'bun', shirt: 0xf4a6b8, pants: 0x3a3a5a },
   nala:    { skin: 0xd9a582, hair: 0x2a1a12, hairStyle: 'long', shirt: 0x7fb24a, pants: 0x2d2d2d },

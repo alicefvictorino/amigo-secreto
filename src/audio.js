@@ -165,6 +165,28 @@ export const sfx = {
     o.connect(f); f.connect(g); g.connect(master);
     o.start(t); lfo.start(t); o.stop(t + 2.5); lfo.stop(t + 2.5);
   },
+  // várias vozes gritando juntas, no mesmo tempo
+  crowdShout() {
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    for (let v = 0; v < 11; v++) {
+      const base = 230 + v * 38 + Math.random() * 25;
+      const o = ctx.createOscillator(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(base, t);
+      o.frequency.linearRampToValueAtTime(base * 1.12, t + 0.35);
+      o.frequency.linearRampToValueAtTime(base * 1.25, t + 1.2);
+      o.frequency.linearRampToValueAtTime(base * 1.05, t + 1.9);
+      f.type = 'bandpass'; f.frequency.value = 800 + (v % 3) * 250; f.Q.value = 1.3;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.045, t + 0.06);
+      g.gain.setValueAtTime(0.045, t + 1.6);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 2.1);
+      o.connect(f); f.connect(g); g.connect(master);
+      o.start(t); o.stop(t + 2.2);
+    }
+    noise(1.8, { vol: 0.06, freq: 1600, q: 0.4, attack: 0.05 });
+  },
   splash() { noise(0.5, { vol: 0.18, freq: 1800, q: 0.4, filter: 'highpass' }); noise(0.35, { vol: 0.1, freq: 500, q: 0.7, when: 0.05 }); },
   bump() { noise(0.12, { vol: 0.3, freq: 220, q: 1 }); },
   splat() { noise(0.3, { vol: 0.35, freq: 140, q: 0.8 }); noise(0.25, { vol: 0.14, freq: 1200, q: 0.5, when: 0.02 }); },

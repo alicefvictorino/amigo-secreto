@@ -222,6 +222,7 @@ function nextLine() {
   if (typeof line.do === 'function') line.do();
   if (line.sfx && sfx[line.sfx]) sfx[line.sfx]();
   [line, ...(line.sim || [])].forEach(l => { if (l.text) d.bubbles.push(makeBubble(l)); });
+  if (line.instant) d.bubbles.forEach(b => b.finish());   // grito: aparece inteiro, todo mundo junto
   $('advance').classList.add('show');
   if (line.auto) d.timer = setTimeout(() => { if (state.dialog === d) { d.bubbles.forEach(b => b.finish()); nextLine(); } }, line.auto);
 }
