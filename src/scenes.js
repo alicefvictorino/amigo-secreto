@@ -410,8 +410,9 @@ export const MEMORIES = [
 
       const check = () => { if (api.state.eliminated.has('hanna') && api.state.eliminated.has('analuz')) api.complete('Não sou Hanna, nem Analuz. Mas eu estava aqui.'); };
 
-      api.npc('hanna', -3.1, -1.3, {
-        extras: ['tray'], label: 'Falar com Hanna',
+      // Hanna perto da janela, entre os puffs
+      api.npc('hanna', 4.35, 0.0, {
+        rot: -Math.PI / 2, extras: ['tray'], label: 'Falar com Hanna',
         look: { shirt: 0x151515, skirt: 0x151515, skirtLen: 'short', sleeveless: true, strapless: true },
         lines: [{ text: 'Alguém quer bussys?' }],
         onInteract: async () => { await api.eliminate('hanna'); check(); },
@@ -439,14 +440,14 @@ export const MEMORIES = [
         const pp = api.player ? api.player.root.position : null;
         const near = pp && pp.distanceTo(cat.root.position) < 1.5;
         ang += dt * (near ? 1.6 : 0.85);
-        const x = Math.cos(ang) * 3.9, z = 0.35 + Math.sin(ang) * 0.75;
+        const x = Math.cos(ang) * 3.4, z = 0.35 + Math.sin(ang) * 0.75;
         cat.root.position.set(x, 0, z);
-        cat.root.rotation.y = Math.atan2(-Math.sin(ang) * 3.9, Math.cos(ang) * 0.75);
+        cat.root.rotation.y = Math.atan2(-Math.sin(ang) * 3.4, Math.cos(ang) * 0.75);
         cat.animate(dt, 3);
       });
 
-      // pista escondida: um celular caído entre os puffs, com a foto daquela noite
-      photoClue(st, api, { x: 5.15, z: 0.05, rot: 0.5, photo: fotoMelhores, caption: 'Melhores do Ano 2024', thought: 'Nossa... Queria lembrar quem eu sou.' });
+      // pista escondida: um celular caído no meio da sala, com a foto daquela noite
+      photoClue(st, api, { x: 0.2, z: -0.05, rot: 0.5, photo: fotoMelhores, caption: 'Melhores do Ano 2024', thought: 'Nossa... Queria lembrar quem eu sou.' });
 
       api.exit(-5.4, 0.2, { rotY: Math.PI / 2, w: 1.5 });
 
