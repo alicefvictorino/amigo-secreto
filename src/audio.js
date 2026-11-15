@@ -4,14 +4,32 @@ let master = null;
 let muted = false;
 let musicNodes = null;
 
+let unlocked = false;
 export function initAudio() {
-  if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
+  // iPhone: pede para o som do jogo tocar como mídia, mesmo com a chave do silencioso ligada
+  try { if (navigator.audioSession && navigator.audioSession.type !== 'playback') navigator.audioSession.type = 'playback'; } catch (e) { /* sem suporte */ }
+  if (ctx) {
+    if (ctx.state !== 'running') { const r = ctx.resume(); if (r && r.catch) r.catch(() => {}); }
+    unlock();
+    return;
+  }
   try {
     ctx = new (window.AudioContext || window.webkitAudioContext)();
     master = ctx.createGain();
-    master.gain.value = 0.6;
+    master.gain.value = muted ? 0 : 0.6;
     master.connect(ctx.destination);
   } catch (e) { ctx = null; }
+}
+
+// iPhone: tocar um som mudo dentro do toque destrava o áudio da página
+function unlock() {
+  if (!ctx || unlocked) return;
+  try {
+    const b = ctx.createBuffer(1, 1, 22050);
+    const src = ctx.createBufferSource();
+    src.buffer = b; src.connect(ctx.destination); src.start(0);
+  } catch (e) { /* ignora */ }
+  if (ctx.state === 'running') unlocked = true;
 }
 
 export function toggleMute() {

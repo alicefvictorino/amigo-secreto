@@ -830,7 +830,9 @@ $('startBtn').addEventListener('click', startGame);
 // música da tela inicial: começa já se o navegador deixar, senão no primeiro clique ou tecla
 initAudio();
 playMusic('menu');
-['pointerdown', 'keydown', 'touchstart'].forEach(ev => document.addEventListener(ev, () => initAudio(), { capture: true }));
+['pointerdown', 'pointerup', 'touchstart', 'touchend', 'click', 'keydown'].forEach(ev => document.addEventListener(ev, () => initAudio(), { capture: true }));
+// ao voltar para a aba (o iPhone pausa o som quando a aba sai da frente)
+document.addEventListener('visibilitychange', () => { if (!document.hidden) initAudio(); });
 document.querySelectorAll('[data-jump]').forEach(b => b.addEventListener('click', () => { initAudio(); buildHud(); jumpTo(+b.dataset.jump); }));
 document.body.classList.toggle('presenter', PRESENTER);
 buildHud();
