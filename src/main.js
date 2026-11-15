@@ -8,9 +8,11 @@ import { PRESENTER } from './secret.js';
 // ------------------------------------------------------------------
 // Renderização
 // ------------------------------------------------------------------
+const TOUCH = (window.matchMedia && matchMedia('(pointer: coarse)').matches) || 'ontouchstart' in window;
+if (TOUCH) document.body.classList.add('touch');
 const canvas = document.getElementById('game');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, TOUCH ? 1.5 : 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -257,11 +259,15 @@ function updateAmbient() {
 // Interações
 // ------------------------------------------------------------------
 const promptEl = $('prompt');
+const actEl = $('act');
+const stickHintEl = $('stickhint');
+let stickUsed = false;
 let nearest = null;
 function updatePrompt() {
   nearest = null;
   const st = state.stage;
-  if (!st || state.dialog || state.cutscene || !state.player) { promptEl.style.display = 'none'; return; }
+  if (TOUCH && stickHintEl) stickHintEl.style.display = (!stickUsed && st && state.player && !state.dialog && !state.cutscene && !state.screenResolve) ? 'flex' : 'none';
+  if (!st || state.dialog || state.cutscene || !state.player) { promptEl.style.display = 'none'; if (TOUCH) actEl.style.display = 'none'; return; }
   const pp = state.player.root.position;
   let best = Infinity;
   st.interactables.forEach(it => {
@@ -270,12 +276,17 @@ function updatePrompt() {
     const d = Math.hypot(p.x - pp.x, p.z - pp.z);
     if (d < (it.r || 2.2) && d < best) { best = d; nearest = it; }
   });
+  if (TOUCH) {
+    const lbl = nearest ? (nearest.label || 'Interagir') : '';
+    if (actEl.textContent !== lbl) actEl.textContent = lbl;
+    actEl.style.display = nearest ? 'block' : 'none';
+  }
   if (!nearest) { promptEl.style.display = 'none'; return; }
   const p = nearest.pos().clone();
   p.y += nearest.h ?? 2.9;
   const v = p.project(camera);
   promptEl.style.display = '';
-  promptEl.innerHTML = `<kbd>E</kbd> ${nearest.label || 'Interagir'}`;
+  promptEl.innerHTML = TOUCH ? `👆 ${nearest.label || 'Interagir'}` : `<kbd>E</kbd> ${nearest.label || 'Interagir'}`;
   const W = window.innerWidth, H = window.innerHeight;
   const r = promptEl.getBoundingClientRect();
   const x = Math.min(Math.max((v.x * 0.5 + 0.5) * W, r.width / 2 + 8), W - r.width / 2 - 8);
@@ -400,10 +411,11 @@ function updatePlayer(dt) {
     if (keys.ArrowRight || keys.KeyD) mx += 1;
     if (keys.ArrowUp || keys.KeyW) mz -= 1;
     if (keys.ArrowDown || keys.KeyS) mz += 1;
+    if (!mx && !mz && touchMove.on) { mx = touchMove.x; mz = touchMove.z; }
   }
   const len = Math.hypot(mx, mz);
-  const speed = 5.2 * (state.stage.flags.speedMul || 1);
-  if (len > 0) {
+  const speed = 5.2 * (state.stage.flags.speedMul || 1) * Math.min(1, Math.max(len, 0.45));
+  if (len > 0.12) {
     mx /= len; mz /= len;
     const pos = pl.root.position;
     pos.x += mx * speed * dt; pos.z += mz * speed * dt;
@@ -418,7 +430,7 @@ function updatePlayer(dt) {
     state.idleTime += dt;
     if (state.stage.flags.danceIdle && state.idleTime > 1.2 && free) pl.anim.mode = 'dance';
   }
-  if (!state.playerLocked) animateCharacter(pl, dt, len > 0 ? speed : 0);
+  if (!state.playerLocked) animateCharacter(pl, dt, len > 0.12 ? speed : 0);
 }
 
 function updateNpcs(dt) {
@@ -561,7 +573,7 @@ async function narrate(lines) {
   el.classList.add('show');
   for (const l of lines) {
     if (typeof l === 'function') { el.innerHTML = ''; await l(); continue; }
-    el.innerHTML = `<span>${l}</span><em>Enter</em>`;
+    el.innerHTML = `<span>${l}</span><em>${TOUCH ? 'Toque' : 'Enter'}</em>`;
     el.classList.remove('in'); void el.offsetWidth; el.classList.add('in');
     sfx.blip();
     await new Promise(r => { state.screenResolve = () => { state.screenResolve = null; r(); }; });
@@ -581,7 +593,7 @@ async function flash(ms = 900) {
 function showScreen(html, { wait: waitKey = true, cls = '' } = {}) {
   const el = $('screen');
   el.className = `show ${cls}`;
-  el.innerHTML = html + (waitKey ? '<div class="cont">Enter para continuar</div>' : '');
+  el.innerHTML = html + (waitKey ? `<div class="cont">${TOUCH ? 'Toque' : 'Enter'} para continuar</div>` : '');
   return new Promise(resolve => {
     if (!waitKey) { resolve(); return; }
     state.screenResolve = () => { el.className = ''; state.screenResolve = null; resolve(); };
@@ -654,7 +666,8 @@ async function enterCorridor(first = false) {
   showHud(true);
   await fade(0, 700);
   if (first) {
-    hint('<kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd> andar &nbsp; <kbd>E</kbd> interagir &nbsp; <kbd>Enter</kbd> continuar');
+    hint(TOUCH ? 'Arraste do lado esquerdo para andar · toque no botão verde para interagir · toque na tela para continuar'
+      : '<kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd> andar &nbsp; <kbd>E</kbd> interagir &nbsp; <kbd>Enter</kbd> continuar');
     setTimeout(() => hint(null), 9000);
     state.cutscene++;
     await thought('Tantas portas... cada uma deve guardar uma memória.');
@@ -741,15 +754,57 @@ window.addEventListener('keydown', (e) => {
 window.addEventListener('keyup', (e) => { keys[e.code] = false; });
 window.addEventListener('blur', () => Object.keys(keys).forEach(k => keys[k] = false));
 document.addEventListener('pointerdown', (e) => {
-  if (!state.started || e.target.closest('button')) return;
+  if (!state.started || e.target.closest('button') || e.target.closest('#prompt')) return;
   if (state.screenResolve) { state.screenResolve(); return; }
   advance();
 });
+
+// ---------- controles de toque ----------
+const touchMove = { on: false, x: 0, z: 0 };
+if (TOUCH) {
+  $('advance').textContent = 'Toque ▸';
+  const zone = $('stickzone'), stick = $('stick'), knob = stick.querySelector('.knob');
+  let pid = null, ox = 0, oy = 0;
+  const R = 55;
+  zone.addEventListener('pointerdown', (e) => {
+    if (!state.started || state.dialog || state.cutscene || state.screenResolve) return;  // deixa o toque avançar o diálogo
+    e.stopPropagation();
+    pid = e.pointerId; ox = e.clientX; oy = e.clientY;
+    zone.setPointerCapture(pid);
+    stick.style.display = 'block'; stick.style.left = ox + 'px'; stick.style.top = oy + 'px';
+    knob.style.transform = 'translate(0,0)';
+    stickUsed = true;
+    touchMove.on = true; touchMove.x = 0; touchMove.z = 0;
+  });
+  zone.addEventListener('pointermove', (e) => {
+    if (e.pointerId !== pid) return;
+    let dx = e.clientX - ox, dy = e.clientY - oy;
+    const d = Math.hypot(dx, dy);
+    if (d > R) { dx *= R / d; dy *= R / d; }
+    knob.style.transform = `translate(${dx}px, ${dy}px)`;
+    touchMove.x = dx / R; touchMove.z = dy / R;
+  });
+  const end = (e) => {
+    if (e.pointerId !== pid) return;
+    pid = null; touchMove.on = false; touchMove.x = touchMove.z = 0;
+    stick.style.display = 'none';
+  };
+  zone.addEventListener('pointerup', end);
+  zone.addEventListener('pointercancel', end);
+  const doAct = (e) => { e.preventDefault(); e.stopPropagation(); initAudio(); if (state.screenResolve) { state.screenResolve(); return; } if (advance()) return; if (!state.cutscene) interact(); };
+  actEl.addEventListener('pointerdown', doAct);
+  promptEl.addEventListener('pointerdown', doAct);
+}
 
 function startGame() {
   if (state.started) return;
   state.started = true;
   initAudio();
+  if (TOUCH) {
+    const el = document.documentElement;
+    const fs = el.requestFullscreen ? el.requestFullscreen({ navigationUI: 'hide' }) : null;
+    if (fs && fs.then) fs.then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape').catch(() => {})).catch(() => {});
+  }
   $('start').classList.add('hidden');
   buildHud();
   fadeEl.style.opacity = 1;

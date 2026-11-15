@@ -2,7 +2,9 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>Quem sou eu? · Amigo secreto 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -139,6 +141,45 @@
   body.presenter #start .jumps.pres-only { display: flex !important; }
   #start .jumps { margin-top: .8em; display: flex; flex-wrap: wrap; gap: .4em; }
   #start .jumps button { font-size: clamp(11px, .85vw, 15px); padding: .25em .7em; box-shadow: none; background: #fff; color: var(--escuro); border-width: 2px; border-radius: 99px; }
+
+  /* ---------- celular ---------- */
+  html, body { touch-action: none; overscroll-behavior: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+  #touch { display: none; }
+  body.touch #touch { display: block; }
+  #stickzone { position: fixed; left: 0; top: 0; bottom: 0; width: 50vw; z-index: 7; }
+  #stick { position: fixed; z-index: 8; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%; background: rgba(255,244,224,.18); border: 3px solid rgba(255,244,224,.55); pointer-events: none; display: none; }
+  #stick .knob { position: absolute; left: 50%; top: 50%; width: 54px; height: 54px; margin: -27px 0 0 -27px; border-radius: 50%; background: rgba(255,244,224,.85); border: 3px solid var(--escuro); }
+  #stickhint { position: fixed; left: 7vw; bottom: 9vh; z-index: 7; width: 96px; height: 96px; border-radius: 50%; border: 3px dashed rgba(255,244,224,.5); pointer-events: none; display: none; align-items: center; justify-content: center; color: rgba(255,244,224,.75); font-size: 13px; font-weight: 600; text-align: center; line-height: 1.1; }
+  #act { position: fixed; right: 4vw; bottom: 8vh; z-index: 8; font-family: inherit; font-size: 18px; font-weight: 700; background: var(--verde); color: var(--creme); border: 3px solid var(--escuro); border-radius: 99px; padding: .7em 1.2em; box-shadow: 0 5px 0 var(--escuro); max-width: 42vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: none; }
+  #act:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--escuro); }
+  body.touch #prompt { pointer-events: auto; }
+  body.touch #help { display: none !important; }
+  #rotate { position: fixed; inset: 0; z-index: 40; background: var(--escuro); color: var(--creme); display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-size: 22px; font-weight: 600; gap: .6em; padding: 2em; }
+  #rotate .ico { font-size: 64px; animation: girar 2s ease-in-out infinite; }
+  @keyframes girar { 0%, 30% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }
+  @media (orientation: portrait) { body.touch #rotate { display: flex; } }
+  /* telas baixas (celular deitado) */
+  @media (max-height: 520px) {
+    .bubble { font-size: 14px; max-width: 44vw; border-width: 2px; }
+    .bubble.ambient { font-size: 12px; }
+    .bubble.shout { font-size: 26px; }
+    #prompt { font-size: 13px; }
+    #titlecard .year { font-size: 24vh; -webkit-text-stroke: 3px var(--escuro); }
+    #titlecard .ttl { font-size: 7vh; border-width: 3px; }
+    #titlecard .sub { font-size: 4.5vh; }
+    #narr { padding: 3vh 8vw 5vh; }
+    #narr span { font-size: 5.5vh; }
+    .reveal .small { font-size: 7vh; }
+    .reveal .big { font-size: 24vh; -webkit-text-stroke: 3px var(--escuro); }
+    .reveal .big.long { font-size: 13vh; }
+    .polaroid img { max-height: 66vh; }
+    .photo-thought { font-size: 4.5vh; }
+    #start h1 { font-size: 15vh; }
+    #start .presents { font-size: 5vh; }
+    #start button { font-size: 5.5vh; }
+    #start .box { max-width: 52vw; }
+    #toast { font-size: 14px; }
+  }
 </style>
 </head>
 <body>
@@ -159,6 +200,13 @@
   <kbd>F</kbd> tela cheia &nbsp; <kbd>M</kbd> som &nbsp; <kbd>H</kbd> esta ajuda<br>
   <b>Emergência</b>: <kbd>Shift</kbd>+<kbd>N</kbd> pula a cena<span class="pres-only"> &nbsp; <kbd>Shift</kbd>+<kbd>1</kbd>…<kbd>7</kbd> vai para a memória</span>
 </div>
+<div id="touch">
+  <div id="stickzone"></div>
+  <div id="stick"><div class="knob"></div></div>
+  <div id="stickhint">arraste<br>para<br>andar</div>
+  <button id="act"></button>
+</div>
+<div id="rotate"><div class="ico">📱</div><div>Gire o celular para jogar deitado</div></div>
 <div id="fade"></div>
 <div id="flash"></div>
 <div id="start">
