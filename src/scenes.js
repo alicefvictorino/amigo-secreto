@@ -1503,6 +1503,7 @@ export const MEMORIES = [
     id: 'aviao', door: '?', title: 'Avião', place: 'A caminho da Bahia', color: 0xf2c230,
     eliminates: [], final: true,
     build(st, api) {
+      st.flags.tight = true;   // cabine estreita: a câmera não se afasta no celular em pé
       st.engine = api;
       const L = -12, R = 10;
       st.floor(L, R, -2.7, 2.7, 0x4a5568, { checker: 0x434d60, tile: 1.2 });

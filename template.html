@@ -162,7 +162,6 @@
   #rotate { position: fixed; inset: 0; z-index: 40; background: var(--escuro); color: var(--creme); display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-size: 22px; font-weight: 600; gap: .6em; padding: 2em; }
   #rotate .ico { font-size: 64px; animation: girar 2s ease-in-out infinite; }
   @keyframes girar { 0%, 30% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }
-  @media (orientation: portrait) { body.touch #rotate { display: flex; } }
   /* telas baixas (celular deitado) */
   @media (max-height: 520px) {
     .bubble { font-size: 14px; max-width: 44vw; border-width: 2px; }
@@ -195,6 +194,39 @@
   body.touch #start .box { padding-left: env(safe-area-inset-left); }
   body.touch #advance { right: calc(max(2vw, env(safe-area-inset-right)) + 6px); }
   @media (max-height: 520px) { .iostip { font-size: 12px; margin-top: .6em; } }
+
+  /* celular em pé */
+  body.portrait #start { align-items: flex-start; justify-content: center; text-align: center; padding: calc(8vh + env(safe-area-inset-top)) 6vw 0; background: linear-gradient(180deg, var(--creme) 0%, var(--creme) 40%, rgba(255,244,224,0) 60%); }
+  body.portrait #start .box { max-width: 90vw; padding-left: 0; }
+  body.portrait #start h1 { font-size: 14vw; }
+  body.portrait #start .presents { font-size: 5vw; }
+  body.portrait #start button { font-size: 6vw; }
+  body.portrait .iostip { font-size: 13px; margin: .9em auto 0; text-align: left; }
+  body.portrait #stickzone { top: 42vh; width: 100vw; }
+  body.portrait #stickhint { left: calc(10vw + env(safe-area-inset-left)); bottom: calc(10vh + env(safe-area-inset-bottom)); }
+  body.portrait #act { right: 5vw; bottom: calc(7vh + env(safe-area-inset-bottom)); max-width: 58vw; }
+  body.portrait .bubble { font-size: 14px; max-width: 62vw; border-width: 2px; }
+  body.portrait .bubble.ambient { font-size: 12px; }
+  body.portrait .bubble.shout { font-size: 24px; max-width: 80vw; }
+  body.portrait #prompt { font-size: 13px; }
+  body.portrait #hint { width: 86vw; font-size: 13px; text-align: center; bottom: 4vh; }
+  body.portrait #titlecard .year { font-size: 26vw; -webkit-text-stroke: 3px var(--escuro); }
+  body.portrait #titlecard .ttl { font-size: 7vw; border-width: 3px; }
+  body.portrait #titlecard .sub { font-size: 4.5vw; }
+  body.portrait #narr { padding: 4vh 7vw calc(10vh + env(safe-area-inset-bottom)); }
+  body.portrait #narr span { font-size: 5.4vw; }
+  body.portrait #screen.photo { flex-direction: column; gap: 3vh; }
+  body.portrait .polaroid img { max-width: 84vw; max-height: 50vh; }
+  body.portrait .polaroid .cap { font-size: 4vw; }
+  body.portrait .photo-thought { max-width: 84vw; font-size: 4.6vw; }
+  body.portrait .reveal .small { font-size: 6vw; }
+  body.portrait .reveal .big { font-size: 22vw; -webkit-text-stroke: 3px var(--escuro); }
+  body.portrait .reveal .big.long { font-size: 11vw; }
+  body.portrait .love .l1 { font-size: 15vw; }
+  body.portrait .love .l2 { font-size: 20vw; }
+  body.portrait .mz-title { font-size: 6.5vw; top: calc(3vh + env(safe-area-inset-top)); }
+  body.portrait #mosaico { top: calc(10vh + env(safe-area-inset-top)); bottom: 8vh; left: 3vw; right: 3vw; }
+  body.portrait #screen .cont { bottom: calc(3vh + env(safe-area-inset-bottom)); }
 </style>
 </head>
 <body>
@@ -221,7 +253,6 @@
   <div id="stickhint">arraste<br>para<br>andar</div>
   <button id="act"></button>
 </div>
-<div id="rotate"><div class="ico">📱</div><div>Gire o celular para jogar deitado</div></div>
 <div id="fade"></div>
 <div id="flash"></div>
 <div id="start">

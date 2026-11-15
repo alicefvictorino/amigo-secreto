@@ -25,11 +25,22 @@ renderer.toneMappingExposure = 1.05;
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(38, 16 / 9, 0.1, 500);
 
+// celular em pé: campo de visão mais aberto e câmera um pouco mais afastada, seguindo o boneco
+let PORTRAIT = false, camScale = 1;
 function resize() {
   const w = window.innerWidth, h = window.innerHeight;
   renderer.setSize(w, h, false);
-  camera.aspect = w / h;
+  const a = w / h;
+  camera.aspect = a;
+  PORTRAIT = a < 0.9;
+  if (PORTRAIT) {
+    const hfov = 46 * Math.PI / 180;
+    camera.fov = Math.min(82, 2 * Math.atan(Math.tan(hfov / 2) / a) * 180 / Math.PI);
+    camScale = 1.28;
+  } else { camera.fov = 38; camScale = 1; }
+  document.body.classList.toggle('portrait', PORTRAIT);
   camera.updateProjectionMatrix();
+  if (typeof placeStartCamera === 'function' && placeStartCamera) placeStartCamera();
 }
 window.addEventListener('resize', resize);
 resize();
@@ -356,8 +367,11 @@ function camFollow() { state.cam.mode = 'follow'; }
 function updateCamera(dt, snap = false) {
   const c = state.cam;
   if (c.mode === 'manual' && c.manual) {
-    camera.position.set(c.manual.px, c.manual.py, c.manual.pz);
     c.target.set(c.manual.lx, c.manual.ly, c.manual.lz);
+    camera.position.set(
+      c.target.x + (c.manual.px - c.target.x) * camScale,
+      c.target.y + (c.manual.py - c.target.y) * camScale,
+      c.target.z + (c.manual.pz - c.target.z) * camScale);
     camera.lookAt(c.target);
     return;
   }
@@ -365,13 +379,15 @@ function updateCamera(dt, snap = false) {
   const p = state.player.root.position;
   const goal = tmpV.set(p.x, p.y * 0.85, p.z);
   if (c.clamp) {
-    goal.x = Math.min(Math.max(goal.x, c.clamp.minX), c.clamp.maxX);
-    goal.z = Math.min(Math.max(goal.z, c.clamp.minZ), c.clamp.maxZ);
+    // em pé a tela é estreita: a câmera acompanha o boneco para os lados
+    if (!PORTRAIT) goal.x = Math.min(Math.max(goal.x, c.clamp.minX), c.clamp.maxX);
+    const zPad = PORTRAIT ? 1.5 : 0;
+    goal.z = Math.min(Math.max(goal.z, c.clamp.minZ - zPad), c.clamp.maxZ + zPad);
   }
   goal.add(c.look);
   const k = snap ? 1 : 1 - Math.pow(0.002, dt);
   c.target.lerp(goal, k);
-  c.pos.copy(c.target).add(c.offset);
+  c.pos.copy(c.target).addScaledVector(c.offset, state.stage && state.stage.flags.tight ? 1 : camScale);
   camera.position.lerp(c.pos, snap ? 1 : k);
   camera.lookAt(c.target);
 }
@@ -807,7 +823,7 @@ function startGame() {
   if (TOUCH) {
     const el = document.documentElement;
     const fs = el.requestFullscreen ? el.requestFullscreen({ navigationUI: 'hide' }) : null;
-    if (fs && fs.then) fs.then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape').catch(() => {})).catch(() => {});
+    if (fs && fs.then) fs.then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock('portrait').catch(() => {})).catch(() => {});
   }
   $('start').classList.add('hidden');
   buildHud();
@@ -846,6 +862,7 @@ function loop() {
 }
 
 // tela inicial: uma cena de fundo simples girando
+let placeStartCamera = null;
 (function idleBackdrop() {
   const st = new Stage(scene);
   state.stage = null;
@@ -856,7 +873,12 @@ function loop() {
   st.add(pl.root);
   // um "?" flutuando sobre o boneco
   const q = st.sign('?', 0, 2.75, 0, 0.7, 0.7, { bg: null, fg: '#d7372f' });
-  camera.position.set(-2.4, 1.9, 7.5); camera.lookAt(-2.4, 1.3, 0);
+  placeStartCamera = () => {
+    if (state.started) return;
+    if (PORTRAIT) { camera.position.set(0, 2.9, 6.2); camera.lookAt(0, 2.9, 0); }
+    else { camera.position.set(-2.4, 1.9, 7.5); camera.lookAt(-2.4, 1.3, 0); }
+  };
+  placeStartCamera();
   st.updaters.push((dt, t) => { q.position.y = 2.75 + Math.sin(t * 2) * 0.08; });
   let tt = 0;
   const spin = () => { if (state.started) { st.dispose(); return; } tt += 0.016; pl.root.rotation.y += 0.01; animateCharacter(pl, 0.016, 0); st.updaters.forEach(f => f(0.016, tt)); renderer.render(scene, camera); requestAnimationFrame(spin); };

@@ -53,7 +53,7 @@ export function montarMosaico() {
   const W = box.clientWidth, H = box.clientHeight, GAP = Math.max(6, Math.round(W * 0.007));
   const a = FOTOS.map(f => f[1]), n = a.length;
   let best = null;
-  for (let k = 1; k <= Math.min(6, n); k++) {
+  for (let k = 1; k <= Math.min(H > W ? 10 : 6, n); k++) {
     // partição linear: k fileiras contíguas com somas de proporção parecidas
     const pre = [0]; a.forEach(x => pre.push(pre[pre.length - 1] + x));
     const target = pre[n] / k;
