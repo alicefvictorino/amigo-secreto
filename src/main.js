@@ -10,10 +10,6 @@ import { PRESENTER } from './secret.js';
 // ------------------------------------------------------------------
 const TOUCH = (window.matchMedia && matchMedia('(pointer: coarse)').matches) || 'ontouchstart' in window;
 if (TOUCH) document.body.classList.add('touch');
-// iPhone/iPad no Safari (fora do ícone da Tela de Início): mostra como jogar em tela cheia
-const IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-const STANDALONE = window.navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches);
-if (IOS && !STANDALONE) document.body.classList.add('ios-browser');
 const canvas = document.getElementById('game');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, TOUCH ? 1.5 : 2));
