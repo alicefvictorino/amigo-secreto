@@ -686,7 +686,7 @@ async function enterCorridor(first = false) {
   showHud(true);
   await fade(0, 700);
   if (first) {
-    hint(TOUCH ? 'Arraste do lado esquerdo para andar · toque no botão verde para interagir · toque na tela para continuar'
+    hint(TOUCH ? `Arraste o dedo ${PORTRAIT ? 'na parte de baixo da tela' : 'do lado esquerdo'} para andar · toque no botão verde para interagir · toque na tela para continuar`
       : '<kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd> andar &nbsp; <kbd>E</kbd> interagir &nbsp; <kbd>Enter</kbd> continuar');
     setTimeout(() => hint(null), 9000);
     state.cutscene++;
