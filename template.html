@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Quem sou eu?">
+<meta name="theme-color" content="#2b1d14">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
 <title>Quem sou eu? · Amigo secreto 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -180,6 +185,16 @@
     #start .box { max-width: 52vw; }
     #toast { font-size: 14px; }
   }
+
+  /* dica de tela cheia no iPhone e áreas seguras (entalhe) */
+  .iostip { display: none; margin-top: 1em; max-width: 30em; font-size: 14px; line-height: 1.35; color: #5a4636; background: #fff; border: 2px dashed #c9b48f; border-radius: 12px; padding: .6em .8em; }
+  .iostip .sh { display: inline-block; border: 1.5px solid #5a4636; border-radius: 4px; padding: 0 .25em; font-size: .9em; }
+  body.ios-browser .iostip { display: block; }
+  body.touch #act { right: calc(max(4vw, env(safe-area-inset-right)) + 4px); bottom: calc(max(8vh, env(safe-area-inset-bottom)) + 4px); }
+  body.touch #stickhint { left: calc(max(7vw, env(safe-area-inset-left)) + 8px); }
+  body.touch #start .box { padding-left: env(safe-area-inset-left); }
+  body.touch #advance { right: calc(max(2vw, env(safe-area-inset-right)) + 6px); }
+  @media (max-height: 520px) { .iostip { font-size: 12px; margin-top: .6em; } }
 </style>
 </head>
 <body>
@@ -214,6 +229,7 @@
     <div class="presents">Alice apresenta...</div>
     <h1>Quem sou <em>eu?</em></h1>
     <button id="startBtn">Começar ▸</button>
+    <div class="iostip">No iPhone, para jogar em tela cheia: toque em <b>Compartilhar</b> <span class="sh">⬆︎</span> e depois em <b>Adicionar à Tela de Início</b>. Abra o jogo pelo ícone que aparecer.</div>
     <div class="jumps pres-only">
       <button data-jump="0">1 · Melhores do Ano</button><button data-jump="1">2 · Vale</button><button data-jump="2">3 · Aniversário</button><button data-jump="3">4 · Caicó</button><button data-jump="4">5 · Formatura</button><button data-jump="5">6 · Escola</button><button data-jump="6">7 · Avião</button>
     </div>
